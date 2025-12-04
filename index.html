@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan de Desarrollo Municipal 2025 - Alcaldía de Guatapé</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <!-- Logo y Título -->
+        <div class="sidebar-header">
+            <div class="logo-container">
+                <img 
+                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Escudo_de_Guatap%C3%A9_%28Antioquia%29.svg/120px-Escudo_de_Guatap%C3%A9_%28Antioquia%29.svg.png"
+                    alt="Escudo de Guatapé"
+                    class="logo-img"
+                    onerror="this.style.display='none'"
+                />
+            </div>
+            <h2 class="sidebar-title">Plan de Desarrollo Municipal 2025</h2>
+            <p class="sidebar-subtitle">Guatapé, Antioquia • 2024-2027</p>
+        </div>
+
+        <!-- Menú de Navegación -->
+        <nav class="sidebar-nav">
+            <div class="menu-section">Vista General</div>
+            <button class="menu-item active" onclick="cambiarVista('resumen')" data-vista="resumen">
+                <span class="menu-icon">📊</span>
+                <span>Resumen Ejecutivo</span>
+            </button>
+
+            <div class="menu-section">Secretarías</div>
+            <button class="menu-item" onclick="verSecretaria('Secretaria de Gobierno')" data-secretaria="Secretaria de Gobierno">
+                <span class="menu-icon">🏛️</span>
+                <span>Secretaría de Gobierno</span>
+            </button>
+            <button class="menu-item" onclick="verSecretaria('Sec de Bienestar y Dllo Social')" data-secretaria="Sec de Bienestar y Dllo Social">
+                <span class="menu-icon">👥</span>
+                <span>Bienestar y Desarrollo Social</span>
+            </button>
+            <button class="menu-item" onclick="verSecretaria('Secretaria de Turismo')" data-secretaria="Secretaria de Turismo">
+                <span class="menu-icon">🏖️</span>
+                <span>Secretaría de Turismo</span>
+            </button>
+            <button class="menu-item" onclick="verSecretaria('Sec Planeacion y Obras Pub')" data-secretaria="Sec Planeacion y Obras Pub">
+                <span class="menu-icon">🏗️</span>
+                <span>Planeación y Obras Públicas</span>
+            </button>
+            <button class="menu-item" onclick="verSecretaria('Sec Medio Ambiente y Dllo Rural')" data-secretaria="Sec Medio Ambiente y Dllo Rural">
+                <span class="menu-icon">🌿</span>
+                <span>Medio Ambiente y Desarrollo Rural</span>
+            </button>
+        </nav>
+
+        <!-- Footer del Sidebar -->
+        <div class="sidebar-footer">
+            <p>© 2025 Alcaldía Municipal de Guatapé, Antioquia</p>
+        </div>
+    </aside>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="main-header">
+            <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">☰</button>
+            <h1 class="main-title">Plan de Desarrollo Municipal "Juntos Construimos 2024-2027"</h1>
+        </header>
+
+        <!-- Área de Contenido Dinámico -->
+        <div class="content-area" id="contentArea">
+            <!-- El contenido se cargará aquí dinámicamente -->
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="datos.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
