@@ -1,0 +1,548 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap');
+
+/* ==================== RESET Y BASE ==================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    background: #f9fafb;
+    color: #1f2937;
+}
+
+/* ==================== SIDEBAR ==================== */
+.sidebar {
+    width: 280px;
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+}
+
+.sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+/* Header del Sidebar */
+.sidebar-header {
+    padding: 24px 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo-container {
+    width: 100px;
+    height: 100px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    padding: 8px;
+}
+
+.logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 8px;
+    line-height: 1.3;
+}
+
+.sidebar-subtitle {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+}
+
+/* Navegación */
+.sidebar-nav {
+    padding: 16px 0;
+}
+
+.menu-section {
+    padding: 12px 24px 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.menu-item {
+    width: 100%;
+    padding: 14px 24px;
+    background: transparent;
+    border: none;
+    border-left: 4px solid transparent;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-left-color: #60a5fa;
+    color: white;
+}
+
+.menu-item.active {
+    background: rgba(255, 255, 255, 0.15);
+    border-left-color: #fbbf24;
+    color: white;
+    font-weight: 600;
+}
+
+.menu-icon {
+    font-size: 18px;
+}
+
+/* Footer del Sidebar */
+.sidebar-footer {
+    padding: 20px 24px;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
+}
+
+.sidebar-footer p {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.5;
+}
+
+/* ==================== CONTENIDO PRINCIPAL ==================== */
+.main-content {
+    margin-left: 280px;
+    min-height: 100vh;
+    background: #f9fafb;
+}
+
+.main-header {
+    background: white;
+    padding: 20px 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.menu-toggle {
+    display: none;
+    background: #1e40af;
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.menu-toggle:hover {
+    background: #1e3a8a;
+}
+
+.main-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e3a8a;
+}
+
+.content-area {
+    padding: 32px;
+}
+
+/* ==================== TARJETAS Y COMPONENTES ==================== */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 32px;
+}
+
+.stat-box {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #1e40af;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.15);
+}
+
+.stat-label {
+    font-size: 13px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin-bottom: 4px;
+}
+
+.stat-description {
+    font-size: 13px;
+    color: #9ca3af;
+}
+
+/* Tarjetas de Secretaría */
+.secretaria-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #1e40af;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.secretaria-card:hover {
+    transform: translateX(8px);
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.15);
+}
+
+.secretaria-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 16px;
+}
+
+.secretaria-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.info-item {
+    text-align: center;
+}
+
+.info-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e40af;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    margin-top: 4px;
+}
+
+/* Tarjetas de Programa */
+.card-programa {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #1e40af;
+    transition: all 0.3s ease;
+}
+
+.card-programa:hover {
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.15);
+    transform: translateX(4px);
+}
+
+.programa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.programa-titulo {
+    flex: 1;
+}
+
+.programa-titulo h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.programa-componente {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+/* Badge de Estado */
+.badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Tabla de Información */
+.info-table {
+    width: 100%;
+    margin: 16px 0;
+    border-collapse: collapse;
+}
+
+.info-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+}
+
+.info-table td:first-child {
+    font-weight: 600;
+    color: #4b5563;
+    width: 40%;
+}
+
+.info-table td:last-child {
+    color: #1f2937;
+}
+
+/* Barra de Progreso */
+.progress-container {
+    margin: 20px 0;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 32px;
+    background: #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    transition: width 0.6s ease;
+}
+
+/* Tarjetas Presupuestales */
+.presupuesto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.presupuesto-card {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.presupuesto-card.aprobado {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+}
+
+.presupuesto-card.ejecutado {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.presupuesto-label {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.presupuesto-valor {
+    font-size: 24px;
+    font-weight: 800;
+}
+
+/* Aportes al PDM */
+.aportes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin: 20px 0;
+}
+
+.aporte-item {
+    text-align: center;
+    padding: 16px;
+    background: #f3f4f6;
+    border-radius: 8px;
+}
+
+.aporte-valor {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e40af;
+    margin-bottom: 4px;
+}
+
+.aporte-label {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+}
+
+/* Evidencia */
+.evidencia-box {
+    background: #fef3c7;
+    border-left: 4px solid #f59e0b;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.evidencia-box strong {
+    color: #92400e;
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.evidencia-box p {
+    color: #78350f;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    .main-title {
+        font-size: 18px;
+    }
+
+    .content-area {
+        padding: 20px 16px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .aportes-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== UTILIDADES ==================== */
+.mt-8 { margin-top: 32px; }
+.mb-8 { margin-bottom: 32px; }
+.text-center { text-align: center; }
+.font-bold { font-weight: 700; }
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease;
+}
+
