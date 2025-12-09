@@ -276,6 +276,85 @@ body {
     margin-top: 4px;
 }
 
+/* Tarjetas de Secretaría Mejoradas */
+.secretaria-card-mejorada {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border-top: 5px solid #1e40af;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.secretaria-card-mejorada:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(30, 64, 175, 0.2);
+}
+
+.secretaria-header-mejorada {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.secretaria-icono {
+    font-size: 32px;
+}
+
+.secretaria-titulo {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 0;
+}
+
+.secretaria-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+}
+
+.stat-item-secretaria {
+    background: #f9fafb;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.stat-item-secretaria:hover {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.stat-item-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.stat-item-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e3a8a;
+    line-height: 1;
+}
+
+.stat-item-sublabel {
+    font-size: 10px;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
 /* Tarjetas de Programa */
 .card-programa {
     background: white;
@@ -522,6 +601,74 @@ body {
     .aportes-grid {
         grid-template-columns: 1fr;
     }
+    
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .semaforo-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .dashboard-header h2 {
+        font-size: 24px;
+    }
+    
+    .chart-wrapper {
+        height: 250px;
+    }
+    
+    .secretaria-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stat-item-value {
+        font-size: 22px;
+    }
+    
+    .secretaria-detalle-header {
+        padding: 20px;
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .secretaria-detalle-icono {
+        font-size: 40px;
+    }
+    
+    .secretaria-detalle-header h2 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .semaforo-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .secretaria-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .secretaria-detalle-header {
+        padding: 16px;
+    }
+    
+    .secretaria-detalle-icono {
+        font-size: 36px;
+    }
+    
+    .secretaria-detalle-header h2 {
+        font-size: 18px;
+    }
 }
 
 /* ==================== UTILIDADES ==================== */
@@ -529,6 +676,262 @@ body {
 .mb-8 { margin-bottom: 32px; }
 .text-center { text-align: center; }
 .font-bold { font-weight: 700; }
+
+/* ==================== GRÁFICOS Y SEMÁFOROS ==================== */
+
+/* Contenedor de gráficos */
+.charts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    margin: 32px 0;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.chart-card h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 300px;
+}
+
+/* Semáforo de Estado */
+.semaforo-container {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.semaforo-container h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+.semaforo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.semaforo-item {
+    background: #f9fafb;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.semaforo-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.semaforo-item.excelente {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+
+.semaforo-item.bueno {
+    border-color: #84cc16;
+    background: linear-gradient(135deg, #ecfccb 0%, #d9f99d 100%);
+}
+
+.semaforo-item.regular {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+}
+
+.semaforo-item.critico {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+}
+
+.semaforo-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.semaforo-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #4b5563;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.semaforo-count {
+    font-size: 36px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.semaforo-item.excelente .semaforo-count {
+    color: #059669;
+}
+
+.semaforo-item.bueno .semaforo-count {
+    color: #65a30d;
+}
+
+.semaforo-item.regular .semaforo-count {
+    color: #d97706;
+}
+
+.semaforo-item.critico .semaforo-count {
+    color: #dc2626;
+}
+
+.semaforo-percentage {
+    font-size: 13px;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* Indicadores Visuales Mejorados */
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+}
+
+.kpi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-top: 4px solid #1e40af;
+    transition: all 0.3s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(30, 64, 175, 0.15);
+}
+
+.kpi-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+}
+
+.kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e3a8a;
+    margin-bottom: 4px;
+}
+
+.kpi-label {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.kpi-card .stat-description {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+/* Dashboard Header Mejorado */
+.dashboard-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    border-radius: 16px;
+    padding: 32px;
+    color: white;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.3);
+}
+
+.dashboard-header h2 {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.dashboard-subtitle {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+/* Header de Detalle de Secretaría */
+.secretaria-detalle-header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    border-radius: 16px;
+    padding: 24px 32px;
+    color: white;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 24px rgba(30, 64, 175, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.secretaria-detalle-icono {
+    font-size: 48px;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+}
+
+.secretaria-detalle-header h2 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+    color: white;
+}
+
+/* Sección de Análisis */
+.analysis-section {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.analysis-section h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.insight-box {
+    background: #f0f9ff;
+    border-left: 4px solid #3b82f6;
+    padding: 16px;
+    border-radius: 8px;
+    margin: 12px 0;
+}
+
+.insight-box p {
+    color: #1e3a8a;
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 0;
+}
 
 /* Animaciones */
 @keyframes fadeIn {
@@ -544,5 +947,18 @@ body {
 
 .fade-in {
     animation: fadeIn 0.5s ease;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.pulse-animation {
+    animation: pulse 2s ease-in-out infinite;
 }
 
