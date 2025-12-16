@@ -95,6 +95,8 @@ function obtenerColorAvance(porcentaje) {
     return 'danger';
 }
 
+
+
 function calcularEstadisticasGenerales() {
     const totalProgramas = DATOS_PROGRAMAS.length;
     
@@ -107,9 +109,13 @@ function calcularEstadisticasGenerales() {
         sumaPresupuestoProgramado += prog['VALOR PROGRAMADO EN PLAN PLURIANUAL DE INVERSIONES'] || 0;
         sumaEjecutado += prog['VALOR EJECUTADO'] || 0;
     });
+
+    const avancePromedio = sumaAvances;
     
-    const avancePromedio = (sumaAvances / totalProgramas) * 100;
     
+
+
+
     return {
         totalProgramas,
         avancePromedio: avancePromedio.toFixed(1),
@@ -117,6 +123,10 @@ function calcularEstadisticasGenerales() {
         ejecutadoTotal: sumaEjecutado
     };
 }
+
+
+
+
 
 function calcularEstadisticasSecretaria(nombreSecretaria) {
     const programas = DATOS_PROGRAMAS.filter(p => p.SECRETARIA === nombreSecretaria);
@@ -128,7 +138,7 @@ function calcularEstadisticasSecretaria(nombreSecretaria) {
     let sumaEjecutado = 0;
     
     programas.forEach(prog => {
-        const avance = prog['PORCENTAJE DE EJECUCION DEL  PROGRAMA (HASTA LA FECHA)'] || 0;
+        const avance = prog['PORCENTAJE DE EJECUCIÓN APORTE AL PDM (HASTA LA FECHA)'] || 0;
         sumaAvances += avance;
         if (avance >= 1) programasCompletados++;
         if (avance < 0.4) programasEnRiesgo++;
@@ -138,7 +148,7 @@ function calcularEstadisticasSecretaria(nombreSecretaria) {
     
     return {
         totalProgramas: programas.length,
-        avancePromedio: ((sumaAvances / programas.length) * 100).toFixed(1),
+        avancePromedio: (sumaAvances*100).toFixed(1),
         programasCompletados,
         programasEnRiesgo,
         presupuestoTotal: sumaPresupuesto,
@@ -183,10 +193,20 @@ function mostrarResumen() {
                     <div class="kpi-value">${stats.totalProgramas}</div>
                     <div class="kpi-label">Total Programas</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card kpi-card-wide">
                     <div class="kpi-icon">📈</div>
                     <div class="kpi-value">${stats.avancePromedio}%</div>
                     <div class="kpi-label">Avance General</div>
+                    <div class="kpi-progress-mini">
+                        <div class="kpi-progress-bar">
+                            <div class="kpi-progress-fill" style="width: ${stats.avancePromedio}%; background-color: ${stats.avancePromedio >= 70 ? '#10b981' : stats.avancePromedio >= 40 ? '#f59e0b' : '#ef4444'};">
+                            </div>
+                        </div>
+                        <div class="kpi-progress-labels">
+                            <span class="label-avance">✓ ${stats.avancePromedio}%</span>
+                            <span class="label-faltante">⏳ ${(100 - stats.avancePromedio).toFixed(1)}%</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon">✅</div>
@@ -310,10 +330,17 @@ function mostrarResumen() {
                         <div class="stat-item-label">TOTAL PROGRAMAS</div>
                         <div class="stat-item-value">${statsSecretaria.totalProgramas}</div>
                     </div>
-                    <div class="stat-item-secretaria">
-                        <div class="stat-item-label">AVANCE PROMEDIO</div>
-                        <div class="stat-item-value" style="color: ${colorBorde}">${avance.toFixed(1)}%</div>
-                    </div>
+                        <div class="stat-item-secretaria stat-item-with-bar">
+                            <div class="stat-item-label">AVANCE PROMEDIO</div>
+                            <div class="stat-item-value" style="color: ${colorBorde}">${avance.toFixed(1)}%</div>
+                            <div class="mini-progress-bar-secretaria">
+                                <div class="mini-progress-fill" style="width: ${avance}%; background-color: ${colorBorde};"></div>
+                            </div>
+                            <div class="mini-progress-labels-secretaria">
+                                <span class="mini-label-avance">✓ ${avance.toFixed(1)}%</span>
+                                <span class="mini-label-faltante">⏳ ${(100 - avance).toFixed(1)}%</span>
+                            </div>
+                        </div>
                     <div class="stat-item-secretaria">
                         <div class="stat-item-label">COMPLETADOS</div>
                         <div class="stat-item-value">${statsSecretaria.programasCompletados}</div>
@@ -719,10 +746,20 @@ function mostrarSecretaria(nombreSecretaria) {
                     <div class="kpi-value">${stats.totalProgramas}</div>
                     <div class="kpi-label">Total Programas</div>
                 </div>
-                <div class="kpi-card">
+                <div class="kpi-card kpi-card-wide">
                     <div class="kpi-icon">📈</div>
                     <div class="kpi-value">${stats.avancePromedio}%</div>
                     <div class="kpi-label">Avance Promedio</div>
+                    <div class="kpi-progress-mini">
+                        <div class="kpi-progress-bar">
+                            <div class="kpi-progress-fill" style="width: ${stats.avancePromedio}%; background-color: ${stats.avancePromedio >= 70 ? '#10b981' : stats.avancePromedio >= 40 ? '#f59e0b' : '#ef4444'};">
+                            </div>
+                        </div>
+                        <div class="kpi-progress-labels">
+                            <span class="label-avance">✓ ${stats.avancePromedio}%</span>
+                            <span class="label-faltante">⏳ ${(100 - parseFloat(stats.avancePromedio)).toFixed(1)}%</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-icon">✅</div>
@@ -783,6 +820,12 @@ function renderizarPrograma(prog, numero) {
     const ejecucionPresupuestal = (prog['PORCENTAJE DE EJECUCIÓN PRESUPUESTAL'] || 0) * 100;
     const evidencia = prog['EVIDENCIA FINAL'];
     
+    const etiquetaEstado =
+        avance >= 80 ? 'Excelente' :
+        avance >= 60 ? 'Bueno' :
+        avance >= 40 ? 'Regular' :
+        'Crítico';
+
     return `
         <div class="card-programa">
             <!-- Header del Programa -->
@@ -793,9 +836,10 @@ function renderizarPrograma(prog, numero) {
                     </div>
                     <h3>${numero}. ${programa}</h3>
                 </div>
-                <span class="badge badge-${colorEstado}">
-                    ${avance.toFixed(0)}% Avance
-                </span>
+                    <span class="badge badge-${colorEstado}">
+                        ${avance.toFixed(0)}% Avance - ${etiquetaEstado}
+                    </span>
+
             </div>
             
             <!-- Tabla de Información -->
