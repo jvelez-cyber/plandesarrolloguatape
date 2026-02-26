@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>👥 Gestionar Usuarios | Guatapé</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Patrick+Hand&family=Caveat:wght@400;700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1B5E20; --secondary: #2E7D32; --accent: #43A047;
+  --blue-dark: #0D47A1; --blue-medium: #1976D2; --blue-light: #42A5F5;
+  --gold: #F9A825; --orange: #EF6C00; --teal: #00796B;
+  --danger: #E53935; --success: #4CAF50; --warning: #FFC107;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 25%, #0D47A1 50%, #1976D2 75%, #00796B 100%);
+  background-size: 400% 400%; animation: gradientShift 20s ease infinite; min-height: 100vh;
+}
+@keyframes gradientShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
+
+/* LOADING */
+.loading-overlay {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+}
+.loading-emoji { font-size: 8rem; animation: bounce 1s infinite; }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+.loading-text { font-family:'Permanent Marker',cursive; font-size:3rem; color:white; margin-top:2rem; }
+
+/* LOGIN */
+.login-overlay {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: linear-gradient(135deg, #1B5E20 0%, #0D47A1 50%, #00796B 100%);
+  background-size: 400% 400%; animation: gradientShift 20s ease infinite;
+  display: flex; align-items: center; justify-content: center; z-index: 9998; padding: 20px;
+}
+.login-overlay.hidden { display: none; }
+.login-card {
+  background: white; border-radius: 30px; padding: 3rem; max-width: 440px; width: 100%;
+  text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.5); border: 8px solid var(--primary);
+}
+.login-title { font-family:'Permanent Marker',cursive; font-size:2.4rem; color:var(--primary); margin-bottom:0.3rem; }
+.login-subtitle { font-family:'Patrick Hand',cursive; font-size:1.1rem; color:#666; margin-bottom:2rem; }
+.login-input {
+  width:100%; padding:1rem 1.5rem; border:4px solid #ddd; border-radius:15px;
+  font-family:'Patrick Hand',cursive; font-size:1.2rem; margin-bottom:1rem; transition:all 0.3s; box-sizing:border-box;
+}
+.login-input:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 4px rgba(27,94,32,0.2); }
+.login-btn {
+  width:100%; padding:1rem; background:var(--primary); color:white; border:none; border-radius:20px;
+  font-family:'Patrick Hand',cursive; font-size:1.4rem; font-weight:700; cursor:pointer;
+  transition:all 0.3s; box-shadow:5px 5px 0px rgba(27,94,32,0.4);
+}
+.login-btn:hover { transform:translate(3px,3px); box-shadow:2px 2px 0px rgba(27,94,32,0.4); }
+.login-error {
+  background:#ffebee; color:var(--danger); border:3px solid var(--danger);
+  border-radius:15px; padding:1rem; margin-top:1rem; font-family:'Patrick Hand',cursive; font-size:1.1rem; display:none;
+}
+.login-error.show { display: block; }
+
+/* ACCESS DENIED */
+.access-denied {
+  position: fixed; top:0; left:0; right:0; bottom:0;
+  background: linear-gradient(135deg, #1B5E20 0%, #0D47A1 50%, #00796B 100%);
+  display: none; align-items: center; justify-content: center; z-index: 9997; padding: 20px;
+}
+.access-denied.show { display: flex; }
+.access-card {
+  background:white; border-radius:30px; padding:3rem; text-align:center;
+  max-width:450px; border:8px solid var(--danger); box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+.access-card h2 { font-family:'Permanent Marker',cursive; font-size:2rem; color:var(--danger); margin:1rem 0; }
+.access-card p { font-family:'Patrick Hand',cursive; font-size:1.2rem; color:#666; margin-bottom:1.5rem; }
+.btn-back {
+  display:inline-block; padding:1rem 2rem; background:var(--primary); color:white;
+  border-radius:20px; text-decoration:none; font-family:'Patrick Hand',cursive; font-size:1.2rem; font-weight:700;
+}
+
+/* CONTAINER */
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; position: relative; z-index: 10; }
+
+/* HEADER */
+.page-header {
+  background: white; border-radius: 30px; padding: 2rem 2.5rem; margin-bottom: 2rem;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+  box-shadow: 0 15px 50px rgba(0,0,0,.2); border: 6px solid var(--primary);
+  transform: rotate(-0.5deg);
+}
+.page-title {
+  font-family: 'Permanent Marker', cursive; font-size: 2.5rem;
+  background: linear-gradient(45deg, var(--primary), var(--blue-dark));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.page-subtitle { font-family:'Patrick Hand',cursive; font-size:1.2rem; color:var(--blue-medium); margin-top:0.3rem; }
+.header-actions { display:flex; gap:1rem; align-items:center; flex-wrap:wrap; }
+.user-badge-small {
+  display:flex; align-items:center; gap:0.8rem; background:#f8f9fa;
+  border:3px solid var(--primary); border-radius:50px; padding:0.6rem 1.2rem;
+}
+.user-email-text { font-family:'Patrick Hand',cursive; font-size:1rem; color:var(--primary); font-weight:700; }
+.admin-tag {
+  background:#fff3e0; color:var(--orange); border:2px solid var(--orange);
+  border-radius:20px; padding:0.3rem 0.8rem; font-family:'Caveat',cursive; font-size:0.9rem;
+}
+.btn-nav {
+  padding:0.6rem 1.2rem; border:none; color:white; border-radius:50px;
+  font-family:'Patrick Hand',cursive; font-size:1rem; cursor:pointer; transition:all 0.3s;
+  font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:0.5rem;
+}
+.btn-nav-blue { background:var(--blue-medium); } .btn-nav-blue:hover { background:var(--blue-dark); }
+.btn-nav-red { background:var(--orange); } .btn-nav-red:hover { background:var(--danger); }
+
+/* SECTION CARDS */
+.section-card {
+  background: white; border-radius: 30px; padding: 2.5rem; margin-bottom: 2rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2); border: 4px dashed var(--blue-medium);
+}
+.section-title {
+  font-family:'Permanent Marker',cursive; font-size:2rem; color:var(--primary);
+  margin-bottom:2rem; display:flex; align-items:center; gap:1rem;
+}
+
+/* FORM */
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1.5rem; margin-bottom:1.5rem; }
+.form-group { display:flex; flex-direction:column; gap:0.5rem; }
+.form-group label { font-family:'Patrick Hand',cursive; font-size:1.2rem; font-weight:700; color:var(--primary); }
+.form-group input, .form-group select {
+  padding:0.9rem 1.2rem; border:4px solid #ddd; border-radius:15px;
+  font-family:'Patrick Hand',cursive; font-size:1.1rem; transition:all 0.3s;
+}
+.form-group input:focus, .form-group select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(27,94,32,0.2); }
+.btn-crear {
+  padding:1rem 2.5rem; background:var(--primary); color:white; border:none; border-radius:20px;
+  font-family:'Patrick Hand',cursive; font-size:1.3rem; font-weight:700; cursor:pointer;
+  transition:all 0.3s; box-shadow:5px 5px 0px rgba(27,94,32,0.4);
+}
+.btn-crear:hover { transform:translate(3px,3px); box-shadow:2px 2px 0px rgba(27,94,32,0.4); }
+.btn-crear:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+.form-msg {
+  padding:1rem 1.5rem; border-radius:15px; margin-top:1rem;
+  font-family:'Patrick Hand',cursive; font-size:1.1rem; display:none;
+}
+.form-msg.show { display:block; }
+.form-msg.success { background:#e8f5e9; color:var(--primary); border:3px solid var(--success); }
+.form-msg.error { background:#ffebee; color:var(--danger); border:3px solid var(--danger); }
+
+/* TABLE */
+.table-container { overflow-x:auto; }
+.table-usuarios { width:100%; border-collapse:separate; border-spacing:0 0.8rem; }
+.table-usuarios thead th {
+  background:var(--primary); color:white; padding:1.2rem; font-family:'Patrick Hand',cursive;
+  font-size:1.1rem; font-weight:700; text-align:left;
+}
+.table-usuarios thead th:first-child { border-radius:12px 0 0 12px; }
+.table-usuarios thead th:last-child { border-radius:0 12px 12px 0; }
+.table-usuarios tbody tr { background:white; box-shadow:0 3px 10px rgba(0,0,0,.1); transition:all 0.2s; }
+.table-usuarios tbody tr:hover { transform:scale(1.005); box-shadow:0 6px 20px rgba(0,0,0,.15); }
+.table-usuarios tbody td {
+  padding:1rem 1.2rem; font-family:'Patrick Hand',cursive; font-size:1rem; vertical-align:middle;
+}
+.table-usuarios tbody td:first-child { border-radius:12px 0 0 12px; }
+.table-usuarios tbody td:last-child { border-radius:0 12px 12px 0; }
+.td-email { font-size:0.9rem; color:#555; }
+.rol-badge {
+  display:inline-flex; align-items:center; gap:0.4rem; padding:0.4rem 1rem;
+  border-radius:20px; font-family:'Patrick Hand',cursive; font-size:1rem; font-weight:700; border:3px solid;
+}
+.rol-admin { background:#fff8e1; color:#F57F17; border-color:var(--gold); }
+.rol-editor { background:#e3f2fd; color:var(--blue-medium); border-color:var(--blue-medium); }
+.rol-viewer { background:#f3e5f5; color:#7B1FA2; border-color:#AB47BC; }
+.rol-select {
+  padding:0.5rem 1rem; border:3px solid var(--blue-medium); border-radius:12px;
+  font-family:'Patrick Hand',cursive; font-size:1rem; cursor:pointer; background:white; color:var(--primary);
+}
+.btn-save-rol {
+  padding:0.5rem 0.9rem; background:var(--success); color:white; border:none;
+  border-radius:12px; font-family:'Patrick Hand',cursive; font-size:0.95rem;
+  font-weight:700; cursor:pointer; transition:all 0.3s; margin-left:0.5rem;
+}
+.btn-save-rol:hover { background:var(--primary); transform:scale(1.05); }
+.btn-del-user {
+  padding:0.5rem 0.9rem; background:#ffebee; color:var(--danger); border:2px solid var(--danger);
+  border-radius:12px; font-family:'Patrick Hand',cursive; font-size:0.95rem;
+  font-weight:700; cursor:pointer; transition:all 0.3s;
+}
+.btn-del-user:hover { background:var(--danger); color:white; transform:scale(1.05); }
+.current-user-tag { color:#999; font-family:'Caveat',cursive; font-size:0.95rem; font-style:italic; }
+.empty-state { text-align:center; padding:3rem; color:#999; font-family:'Patrick Hand',cursive; font-size:1.3rem; }
+
+@media (max-width: 768px) {
+  .page-title { font-size:2rem; }
+  .form-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-emoji">👥</div>
+  <div class="loading-text">Verificando acceso...</div>
+</div>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div style="font-size:3.5rem; margin-bottom:0.5rem;">🔐</div>
+    <h2 class="login-title">Acceso Restringido</h2>
+    <p class="login-subtitle">Gestión de Usuarios<br>Municipio de Guatapé</p>
+    <input type="email" id="loginEmail" class="login-input" placeholder="📧 Correo electrónico">
+    <input type="password" id="loginPassword" class="login-input" placeholder="🔒 Contraseña"
+      onkeydown="if(event.key==='Enter') iniciarSesion()">
+    <button class="login-btn" onclick="iniciarSesion()">🚀 Ingresar</button>
+    <div class="login-error" id="loginError">❌ Correo o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- Access Denied -->
+<div class="access-denied" id="accessDenied">
+  <div class="access-card">
+    <div style="font-size:4rem;">🚫</div>
+    <h2>Acceso Denegado</h2>
+    <p>Solo los <strong>administradores</strong> pueden gestionar usuarios.</p>
+    <a href="dashboard-guatape.html" class="btn-back">← Volver al Dashboard</a>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="container" id="mainContent" style="display:none;">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-title">👥 Gestión de Usuarios</div>
+      <div class="page-subtitle">Administración de accesos - Tablero Compromisos</div>
+    </div>
+    <div class="header-actions">
+      <div class="user-badge-small">
+        <span class="user-email-text" id="userEmailDisplay"></span>
+        <span class="admin-tag">⚙️ Admin</span>
+      </div>
+      <a href="dashboard-guatape.html" class="btn-nav btn-nav-blue">
+        <i class="fa-solid fa-arrow-left"></i> Dashboard
+      </a>
+      <button class="btn-nav btn-nav-red" onclick="cerrarSesion()">Salir 🚪</button>
+    </div>
+  </div>
+
+  <!-- Crear Usuario -->
+  <div class="section-card">
+    <h2 class="section-title">➕ Crear Nuevo Usuario</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>👤 Nombre completo</label>
+        <input type="text" id="nuevoNombre" placeholder="Ej: Juan Pérez">
+      </div>
+      <div class="form-group">
+        <label>📧 Correo electrónico</label>
+        <input type="email" id="nuevoEmail" placeholder="usuario@guatape.gov.co">
+      </div>
+      <div class="form-group">
+        <label>🔒 Contraseña</label>
+        <input type="password" id="nuevoPassword" placeholder="Mínimo 6 caracteres">
+      </div>
+      <div class="form-group">
+        <label>🏷️ Rol</label>
+        <select id="nuevoRol">
+          <option value="viewer">👁️ Solo lectura (viewer)</option>
+          <option value="editor">✏️ Editor</option>
+          <option value="admin">⚙️ Administrador</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-crear" id="btnCrear" onclick="crearUsuario()">✨ Crear Usuario</button>
+    <div class="form-msg" id="createMsg"></div>
+  </div>
+
+  <!-- Lista de Usuarios -->
+  <div class="section-card">
+    <h2 class="section-title">📋 Usuarios Registrados</h2>
+    <div class="table-container">
+      <table class="table-usuarios">
+        <thead>
+          <tr>
+            <th>👤 Nombre</th>
+            <th>📧 Correo</th>
+            <th>🏷️ Rol actual</th>
+            <th>✏️ Cambiar rol</th>
+            <th>🗑️ Quitar acceso</th>
+          </tr>
+        </thead>
+        <tbody id="usuariosBody">
+          <tr><td colspan="5" class="empty-state">⏳ Cargando usuarios...</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-family:'Caveat',cursive; font-size:1rem; color:#888; margin-top:1rem;">
+      ⚠️ "Quitar acceso" elimina los permisos del usuario pero no borra su cuenta de Firebase Auth.
+      Para eliminar la cuenta completamente, usa la consola de Firebase.
+    </p>
+  </div>
+
+</div>
+
+<script type="module">
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, doc, getDoc, setDoc, updateDoc, deleteDoc
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBEYH9mlu_Jg41iQq2gAsdVlvlpggvoObQ",
+  authDomain: "compromisos-22fa4.firebaseapp.com",
+  projectId: "compromisos-22fa4"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+let currentUserUid = null;
+
+// ── CARGAR TABLA ──
+async function cargarUsuarios() {
+  const tbody = document.getElementById('usuariosBody');
+  try {
+    const snap = await getDocs(collection(db, "usuarios"));
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-state">📭 No hay usuarios registrados aún</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    snap.forEach(d => {
+      const u = d.data();
+      const uid = d.id;
+      const rolClass = u.rol === 'admin' ? 'rol-admin' : u.rol === 'editor' ? 'rol-editor' : 'rol-viewer';
+      const rolIcon  = u.rol === 'admin' ? '⚙️' : u.rol === 'editor' ? '✏️' : '👁️';
+      const esYo = uid === currentUserUid;
+
+      tbody.innerHTML += `
+        <tr id="row-${uid}">
+          <td><strong>${u.nombre || '—'}</strong></td>
+          <td class="td-email">${u.email || '—'}</td>
+          <td><span class="rol-badge ${rolClass}">${rolIcon} ${u.rol || 'viewer'}</span></td>
+          <td>
+            <select class="rol-select" id="sel-${uid}">
+              <option value="viewer" ${u.rol === 'viewer' ? 'selected' : ''}>👁️ viewer</option>
+              <option value="editor" ${u.rol === 'editor' ? 'selected' : ''}>✏️ editor</option>
+              <option value="admin"  ${u.rol === 'admin'  ? 'selected' : ''}>⚙️ admin</option>
+            </select>
+            <button class="btn-save-rol" onclick="cambiarRol('${uid}')">💾</button>
+          </td>
+          <td>
+            ${esYo
+              ? `<span class="current-user-tag">Tu cuenta</span>`
+              : `<button class="btn-del-user" onclick="quitarAcceso('${uid}', '${(u.email || '').replace(/'/g,"\\'")}')">🗑️ Quitar</button>`
+            }
+          </td>
+        </tr>`;
+    });
+  } catch (e) {
+    console.error(e);
+    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">❌ Error al cargar usuarios</td></tr>';
+  }
+}
+
+// ── CAMBIAR ROL ──
+window.cambiarRol = async function(uid) {
+  const nuevoRol = document.getElementById('sel-' + uid).value;
+  try {
+    await updateDoc(doc(db, "usuarios", uid), { rol: nuevoRol });
+    await cargarUsuarios();
+  } catch (e) {
+    alert('❌ Error al actualizar el rol');
+  }
+};
+
+// ── QUITAR ACCESO ──
+window.quitarAcceso = async function(uid, email) {
+  if (!confirm(`⚠️ ¿Quitar acceso a "${email}"?\n\nSe eliminarán sus permisos. Podrá seguir autenticándose pero sin roles asignados (solo lectura).`)) return;
+  try {
+    await deleteDoc(doc(db, "usuarios", uid));
+    await cargarUsuarios();
+  } catch (e) {
+    alert('❌ Error al quitar acceso');
+  }
+};
+
+// ── CREAR USUARIO ──
+window.crearUsuario = async function() {
+  const nombre   = document.getElementById('nuevoNombre').value.trim();
+  const email    = document.getElementById('nuevoEmail').value.trim();
+  const password = document.getElementById('nuevoPassword').value;
+  const rol      = document.getElementById('nuevoRol').value;
+  const msgEl    = document.getElementById('createMsg');
+  const btn      = document.getElementById('btnCrear');
+
+  msgEl.className = 'form-msg';
+
+  if (!nombre || !email || !password) {
+    msgEl.textContent = '❌ Completa todos los campos';
+    msgEl.className = 'form-msg show error'; return;
+  }
+  if (password.length < 6) {
+    msgEl.textContent = '❌ La contraseña debe tener al menos 6 caracteres';
+    msgEl.className = 'form-msg show error'; return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Creando...';
+
+  try {
+    // Crear usuario en Firebase Auth usando una instancia secundaria
+    // para no cerrar la sesión del admin actual
+    const secondaryApp  = initializeApp(firebaseConfig, 'temp-' + Date.now());
+    const secondaryAuth = getAuth(secondaryApp);
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const uid  = cred.user.uid;
+    await signOut(secondaryAuth);
+    await deleteApp(secondaryApp);
+
+    // Crear documento en Firestore
+    await setDoc(doc(db, "usuarios", uid), {
+      email, nombre, rol, creadoEn: new Date().toISOString()
+    });
+
+    // Limpiar formulario
+    document.getElementById('nuevoNombre').value = '';
+    document.getElementById('nuevoEmail').value  = '';
+    document.getElementById('nuevoPassword').value = '';
+    document.getElementById('nuevoRol').value = 'viewer';
+
+    msgEl.textContent = `✅ Usuario "${nombre}" creado correctamente con rol "${rol}"`;
+    msgEl.className = 'form-msg show success';
+    await cargarUsuarios();
+
+  } catch (e) {
+    console.error(e);
+    const msgs = {
+      'auth/email-already-in-use': '❌ Este correo ya está registrado en Firebase',
+      'auth/invalid-email':        '❌ Correo electrónico inválido',
+      'auth/weak-password':        '❌ La contraseña es demasiado débil',
+    };
+    msgEl.textContent = msgs[e.code] || '❌ Error al crear usuario: ' + e.message;
+    msgEl.className = 'form-msg show error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✨ Crear Usuario';
+  }
+};
+
+// ── AUTH ──
+window.iniciarSesion = async function() {
+  const email    = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  document.getElementById('loginError').classList.remove('show');
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    document.getElementById('loginError').classList.add('show');
+  }
+};
+
+window.cerrarSesion = async function() { await signOut(auth); };
+
+async function verificarRol(uid) {
+  try {
+    const snap = await getDoc(doc(db, "usuarios", uid));
+    return snap.exists() ? (snap.data().rol || 'viewer') : 'viewer';
+  } catch (e) { return 'viewer'; }
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    const rol = await verificarRol(user.uid);
+
+    if (rol !== 'admin') {
+      document.getElementById('loadingOverlay').style.display = 'none';
+      document.getElementById('accessDenied').classList.add('show');
+      return;
+    }
+
+    currentUserUid = user.uid;
+    document.getElementById('userEmailDisplay').textContent = user.email;
+    document.getElementById('mainContent').style.display = 'block';
+    document.getElementById('loadingOverlay').style.display = 'none';
+    await cargarUsuarios();
+
+  } else {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('mainContent').style.display = 'none';
+    document.getElementById('accessDenied').classList.remove('show');
+    currentUserUid = null;
+  }
+});
+</script>
+</body>
+</html>
