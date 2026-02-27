@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>🌳 Tablero Compromisos | Guatapé</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ICONOS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<!-- ECharts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Patrick+Hand&family=Caveat:wght@400;700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  /* Paleta Institucional - Alcaldía de Guatapé */
+  --primary: #1B5E20;      /* Verde oscuro institucional */
+  --secondary: #2E7D32;    /* Verde medio */
+  --accent: #43A047;       /* Verde claro */
+  --blue-dark: #0D47A1;    /* Azul oscuro (embalse) */
+  --blue-medium: #1976D2;  /* Azul medio */
+  --blue-light: #42A5F5;   /* Azul claro */
+  --gold: #F9A825;         /* Dorado */
+  --orange: #EF6C00;       /* Naranja */
+  --teal: #00796B;         /* Verde azulado */
+  --brown: #5D4037;        /* Café tierra */
+  
+  /* Colores funcionales */
+  --success: #4CAF50; --warning: #FFC107; --danger: #E53935;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, 
+    #1B5E20 0%,      /* Verde oscuro */
+    #2E7D32 25%,     /* Verde medio */
+    #0D47A1 50%,     /* Azul oscuro */
+    #1976D2 75%,     /* Azul medio */
+    #00796B 100%     /* Verde azulado */
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.floating-emoji {
+  position: fixed; font-size: 3rem; animation: float 4s ease-in-out infinite;
+  pointer-events: none; z-index: 1;
+}
+.emoji-1 { top: 10%; left: 5%; animation-delay: 0s; }
+.emoji-2 { top: 20%; right: 5%; animation-delay: 1s; }
+.emoji-3 { bottom: 15%; left: 10%; animation-delay: 2s; }
+.emoji-4 { bottom: 25%; right: 8%; animation-delay: 3s; }
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-30px) rotate(15deg); }
+}
+.container { max-width: 1900px; margin: 0 auto; padding: 2rem; position: relative; z-index: 10; }
+
+/* HEADER */
+.header-section {
+  background: white; border-radius: 30px; padding: 2.5rem; margin-bottom: 2rem;
+  box-shadow: 0 15px 50px rgba(0,0,0,.2), inset 0 0 0 4px white, inset 0 0 0 10px var(--primary);
+  transform: rotate(-1deg); position: relative; overflow: visible;
+}
+.header-section::before, .header-section::after {
+  content: '📌'; position: absolute; font-size: 3.5rem;
+  filter: drop-shadow(0 8px 15px rgba(0,0,0,.3)); animation: pinWiggle 3s ease-in-out infinite;
+}
+.header-section::before { top: -18px; left: 25%; transform: rotate(-30deg); }
+.header-section::after { top: -18px; right: 25%; transform: rotate(30deg); animation-delay: 1.5s; }
+@keyframes pinWiggle {
+  0%, 100% { transform: rotate(20deg); }
+  50% { transform: rotate(30deg); }
+}
+.header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 2rem; }
+.header-title {
+  font-family: 'Permanent Marker', cursive; font-size: 3.5rem;
+  background: linear-gradient(45deg, var(--primary), var(--blue-dark), var(--teal));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  transform: rotate(-2deg); filter: drop-shadow(3px 3px 0 rgba(0,0,0,.1));
+}
+.header-subtitle { font-family: 'Patrick Hand', cursive; font-size: 1.6rem; color: var(--blue-medium); margin-top: 0.5rem; }
+
+/* SEGMENTADOR */
+.year-section {
+  background: white; border-radius: 30px; padding: 2.5rem; margin-bottom: 2rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,.2); border: 6px solid white;
+  outline: 4px dashed var(--blue-medium); outline-offset: -18px;
+}
+.section-title {
+  font-family: 'Permanent Marker', cursive; font-size: 2.2rem; color: var(--primary);
+  margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;
+}
+.year-buttons { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.year-btn {
+  background: white; border: 5px solid; border-radius: 25px; padding: 1.2rem 2.5rem;
+  font-family: 'Patrick Hand', cursive; font-size: 1.4rem; font-weight: 700;
+  cursor: pointer; transition: all 0.3s ease; box-shadow: 6px 6px 0px;
+}
+.year-btn:nth-child(1) { border-color: var(--primary); box-shadow: 6px 6px 0px var(--primary); transform: rotate(-2deg); }
+.year-btn:nth-child(2) { border-color: var(--success); box-shadow: 6px 6px 0px var(--success); transform: rotate(2deg); }
+.year-btn:nth-child(3) { border-color: var(--warning); box-shadow: 6px 6px 0px var(--warning); transform: rotate(-1.5deg); }
+.year-btn:nth-child(4) { border-color: var(--danger); box-shadow: 6px 6px 0px var(--danger); transform: rotate(1.5deg); }
+.year-btn:hover { transform: rotate(0deg) translateY(-8px) scale(1.05); box-shadow: 10px 10px 0px; }
+.year-btn.active {
+  transform: rotate(0deg) scale(1.1); background: var(--primary); color: white;
+  border-color: var(--primary); box-shadow: 8px 8px 0px rgba(27, 94, 32, 0.5);
+}
+
+/* Estilos especiales para botones de responsable */
+#responsableButtons .year-btn {
+  font-size: 1.1rem;
+  padding: 1rem 1.8rem;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#responsableButtons .year-btn:hover {
+  white-space: normal;
+  max-width: none;
+  z-index: 10;
+}
+
+/* BOTÓN LIMPIAR FILTROS */
+.btn-limpiar-filtros {
+  background: white;
+  border: 4px solid var(--orange);
+  border-radius: 20px;
+  padding: 1rem 2rem;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--orange);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 5px 5px 0px var(--orange);
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transform: rotate(1deg);
+}
+
+.btn-limpiar-filtros:hover {
+  background: var(--orange);
+  color: white;
+  transform: rotate(0deg) translateY(-5px);
+  box-shadow: 7px 7px 0px rgba(239, 108, 0, 0.5);
+}
+
+.btn-limpiar-filtros i {
+  font-size: 1.3rem;
+}
+
+/* DROPDOWN RESPONSABLES */
+.dropdown-container {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+}
+
+.dropdown-button {
+  width: 100%;
+  background: white;
+  border: 5px solid var(--blue-medium);
+  border-radius: 25px;
+  padding: 1.5rem 2rem;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 6px 6px 0px var(--blue-medium);
+  transform: rotate(-1deg);
+  color: var(--primary);
+}
+
+.dropdown-button:hover {
+  transform: rotate(0deg) translateY(-5px);
+  box-shadow: 8px 8px 0px var(--blue-medium);
+  border-color: var(--primary);
+}
+
+.dropdown-button.active {
+  border-color: var(--primary);
+  box-shadow: 8px 8px 0px var(--primary);
+  transform: rotate(0deg);
+}
+
+.dropdown-icon {
+  font-size: 1.2rem;
+  transition: transform 0.3s ease;
+  color: var(--blue-medium);
+}
+
+.dropdown-button.active .dropdown-icon {
+  transform: rotate(180deg);
+  color: var(--primary);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 5px solid var(--primary);
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0,0,0,.25);
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.dropdown-menu.show {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.dropdown-search {
+  padding: 1.5rem;
+  border-bottom: 3px dashed var(--blue-medium);
+  position: relative;
+}
+
+.dropdown-search i {
+  position: absolute;
+  left: 2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--primary);
+  font-size: 1.2rem;
+}
+
+.dropdown-search input {
+  width: 100%;
+  padding: 0.8rem 0.8rem 0.8rem 3rem;
+  border: 3px solid var(--blue-light);
+  border-radius: 15px;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  transition: all 0.3s;
+}
+
+.dropdown-search input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.1);
+}
+
+.dropdown-items {
+  max-height: 350px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.dropdown-item {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  font-family: 'Patrick Hand', cursive;
+  font-size: 1.1rem;
+  margin-bottom: 0.3rem;
+}
+
+.dropdown-item:hover {
+  background: linear-gradient(90deg, var(--blue-light)20, var(--primary)10);
+  transform: translateX(8px);
+}
+
+.dropdown-item.active {
+  background: var(--primary);
+  color: white;
+  font-weight: 700;
+}
+
+.dropdown-item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
+}
+
+.dropdown-item-info {
+  flex: 1;
+}
+
+.dropdown-item-name {
+  font-weight: 700;
+  color: var(--primary);
+  display: block;
+  line-height: 1.2;
+}
+
+.dropdown-item.active .dropdown-item-name {
+  color: white;
+}
+
+.dropdown-item-cargo {
+  font-size: 0.9rem;
+  color: #666;
+  display: block;
+  margin-top: 0.2rem;
+  font-style: italic;
+}
+
+.dropdown-item.active .dropdown-item-cargo {
+  color: rgba(255,255,255,0.9);
+}
+
+.dropdown-item-badge {
+  background: var(--blue-light);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.dropdown-item.active .dropdown-item-badge {
+  background: white;
+  color: var(--primary);
+}
+
+/* Scrollbar personalizado para dropdown */
+.dropdown-items::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-items::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.dropdown-items::-webkit-scrollbar-thumb {
+  background: var(--blue-medium);
+  border-radius: 10px;
+}
+
+.dropdown-items::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* STATUS CARDS */
+.status-section {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2.5rem; margin-bottom: 2rem;
+}
+.status-card {
+  background: white; padding: 2rem 2rem 3.5rem; border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,.25); cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative;
+}
+.status-card::before {
+  content: ''; position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  width: 70px; height: 30px; background: rgba(0,0,0,.12); border-radius: 4px; box-shadow: 0 3px 8px rgba(0,0,0,.3);
+}
+.status-card:nth-child(1) { transform: rotate(-4deg); }
+.status-card:nth-child(2) { transform: rotate(3deg); }
+.status-card:nth-child(3) { transform: rotate(-3deg); }
+.status-card:nth-child(4) { transform: rotate(4deg); }
+.status-card:hover { transform: rotate(0deg) translateY(-20px) scale(1.08); z-index: 10; box-shadow: 0 30px 70px rgba(0,0,0,.35); }
+.status-card-content { text-align: center; }
+.status-icon { font-size: 6rem; margin-bottom: 1.2rem; display: block; }
+.status-label {
+  font-family: 'Patrick Hand', cursive; font-size: 1.7rem; font-weight: 700;
+  margin-bottom: 0.8rem; display: block; text-transform: uppercase;
+}
+.status-count { font-family: 'Permanent Marker', cursive; font-size: 5rem; display: block; line-height: 1; }
+.status-card.all .status-count { color: var(--primary); }
+.status-card.success .status-count { color: var(--success); }
+.status-card.warning .status-count { color: var(--warning); }
+.status-card.danger .status-count { color: var(--danger); }
+
+/* TOP RESPONSABLES */
+.tree-section {
+  background: white; border-radius: 35px; padding: 3.5rem; margin-bottom: 2rem;
+  box-shadow: 0 25px 70px rgba(0,0,0,.25); position: relative;
+}
+.tree-title {
+  font-family: 'Permanent Marker', cursive; font-size: 2.8rem; color: var(--primary);
+  margin-bottom: 2.5rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 1rem;
+}
+.tree-branches { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2.5rem; width: 100%; }
+.branch-item {
+  background: white; border: 6px solid; border-radius: 25px; padding: 2rem;
+  box-shadow: 7px 7px 0px; cursor: pointer; transition: all 0.35s ease; position: relative; min-height: 450px;
+}
+.branch-item:nth-child(10n+1) { border-color: var(--primary); box-shadow: 7px 7px 0px var(--primary); transform: rotate(-3deg); }
+.branch-item:nth-child(10n+2) { border-color: var(--blue-dark); box-shadow: 7px 7px 0px var(--blue-dark); transform: rotate(2deg); }
+.branch-item:nth-child(10n+3) { border-color: var(--gold); box-shadow: 7px 7px 0px var(--gold); transform: rotate(-2deg); }
+.branch-item:nth-child(10n+4) { border-color: var(--secondary); box-shadow: 7px 7px 0px var(--secondary); transform: rotate(3deg); }
+.branch-item:nth-child(10n+5) { border-color: var(--blue-medium); box-shadow: 7px 7px 0px var(--blue-medium); transform: rotate(-1deg); }
+.branch-item:nth-child(10n+6) { border-color: var(--teal); box-shadow: 7px 7px 0px var(--teal); transform: rotate(2.5deg); }
+.branch-item:nth-child(10n+7) { border-color: var(--orange); box-shadow: 7px 7px 0px var(--orange); transform: rotate(-2.5deg); }
+.branch-item:nth-child(10n+8) { border-color: var(--blue-light); box-shadow: 7px 7px 0px var(--blue-light); transform: rotate(1.5deg); }
+.branch-item:nth-child(10n+9) { border-color: var(--accent); box-shadow: 7px 7px 0px var(--accent); transform: rotate(-3.5deg); }
+.branch-item:nth-child(10n+10) { border-color: var(--brown); box-shadow: 7px 7px 0px var(--brown); transform: rotate(2deg); }
+
+.branch-item:hover {
+  transform: rotate(0deg) translateY(-12px) scale(1.06);
+  box-shadow: 11px 11px 0px currentColor;
+  z-index: 10;
+}
+
+.branch-item.active {
+  transform: rotate(0deg) scale(1.08);
+  box-shadow: 12px 12px 0px currentColor;
+  z-index: 15;
+  animation: pulseActive 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseActive {
+  0%, 100% { box-shadow: 12px 12px 0px currentColor; }
+  50% { box-shadow: 15px 15px 0px currentColor; }
+}
+
+@keyframes highlightTable {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); box-shadow: 0 30px 80px rgba(27, 94, 32, 0.4); }
+}
+
+.branch-item::before {
+  content: '📎'; position: absolute; top: -14px; right: 22px; font-size: 2.5rem;
+  transform: rotate(48deg); filter: drop-shadow(0 4px 8px rgba(0,0,0,.3));
+}
+.responsable-rank {
+  position: absolute; top: -18px; left: 20px; width: 60px; height: 60px;
+  background: linear-gradient(135deg, var(--primary), var(--blue-dark)); color: white;
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: 'Permanent Marker', cursive; font-size: 2rem; box-shadow: 0 8px 20px rgba(0,0,0,.35);
+}
+.responsable-photo {
+  width: 150px; height: 150px; border-radius: 50%; object-fit: cover;
+  border: 6px solid white; box-shadow: 0 12px 30px rgba(0,0,0,.35);
+  margin: 1rem auto 1.2rem; display: block; transition: all 0.35s ease;
+}
+.branch-item:hover .responsable-photo { transform: scale(1.15) rotate(8deg); box-shadow: 0 18px 40px rgba(0,0,0,.45); }
+.responsable-name {
+  font-family: 'Patrick Hand', cursive; font-size: 1.4rem; font-weight: 700;
+  color: var(--primary); text-align: center; margin-bottom: 0.6rem; line-height: 1.3;
+}
+.responsable-cargo { 
+  font-family: 'Caveat', cursive; font-size: 1.1rem; color: #666; 
+  text-align: center; margin-bottom: 1.5rem; font-style: italic;
+}
+.responsable-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-top: 1.2rem; }
+.mini-stat {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 1rem;
+  border-radius: 12px; text-align: center; border: 3px solid;
+  font-family: 'Patrick Hand', cursive; font-weight: 700; transition: all 0.3s ease;
+}
+.mini-stat:hover { transform: scale(1.08); background: white; }
+.mini-stat.total { border-color: var(--primary); color: var(--primary); grid-column: 1 / -1; font-size: 1.2rem; }
+.mini-stat.cumplido { border-color: var(--success); color: var(--success); }
+.mini-stat.proceso { border-color: var(--warning); color: var(--warning); }
+.mini-stat-icon { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+.mini-stat-value { font-size: 2.2rem; display: block; line-height: 1; }
+.mini-stat-label {
+  font-size: 0.9rem; display: block; margin-top: 0.3rem;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* CHARTS */
+.charts-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(550px, 1fr)); gap: 2.5rem; margin-bottom: 2rem; }
+.chart-card {
+  background: white; border-radius: 0; padding: 2.5rem; box-shadow: 0 15px 40px rgba(0,0,0,.2);
+  position: relative; border-left: 50px solid var(--blue-medium);
+}
+.chart-title {
+  font-family: 'Patrick Hand', cursive; font-size: 2rem; color: var(--primary);
+  margin-bottom: 1.8rem; display: flex; align-items: center; gap: 1rem;
+  border-bottom: 4px dashed var(--blue-dark); padding-bottom: 1.2rem;
+}
+
+/* TABLE */
+.table-section { background: white; border-radius: 30px; padding: 2.5rem; box-shadow: 0 20px 60px rgba(0,0,0,.25); position: relative; }
+.table-header {
+  background: white; padding: 1.8rem; border-radius: 18px; margin-bottom: 2.5rem;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;
+  box-shadow: 0 8px 25px rgba(0,0,0,.12);
+}
+.table-title {
+  font-family: 'Permanent Marker', cursive; font-size: 2.3rem; color: var(--primary);
+  display: flex; align-items: center; gap: 1rem;
+}
+.search-wrapper { position: relative; flex: 1; max-width: 450px; }
+.search-wrapper input {
+  width: 100%; padding: 1.2rem 1.2rem 1.2rem 4rem; border: 5px solid var(--blue-medium);
+  border-radius: 28px; font-family: 'Patrick Hand', cursive; font-size: 1.3rem;
+  box-shadow: inset 0 3px 8px rgba(0,0,0,.12); transition: all 0.3s;
+}
+.search-wrapper input:focus {
+  outline: none; border-color: var(--primary); box-shadow: 0 0 0 5px rgba(27, 94, 32, 0.2);
+}
+.search-wrapper i { position: absolute; left: 1.4rem; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 1.5rem; }
+.table-container { overflow-x: auto; background: white; border-radius: 20px; padding: 1rem; }
+.table-compromisos { width: 100%; border-collapse: separate; border-spacing: 0 0.8rem; }
+.table-compromisos thead th {
+  background: var(--primary); color: white; padding: 1.2rem; font-family: 'Patrick Hand', cursive;
+  font-size: 1.2rem; font-weight: 700; text-align: left;
+}
+.table-compromisos thead th:first-child { border-radius: 12px 0 0 12px; }
+.table-compromisos thead th:last-child { border-radius: 0 12px 12px 0; }
+.table-compromisos tbody tr { background: white; transition: all 0.3s ease; box-shadow: 0 3px 10px rgba(0,0,0,.1); }
+.table-compromisos tbody tr:hover { transform: scale(1.02); box-shadow: 0 8px 20px rgba(0,0,0,.15); }
+.table-compromisos tbody td { padding: 1.2rem; font-size: 0.95rem; vertical-align: middle; }
+.table-compromisos tbody td:first-child { border-radius: 12px 0 0 12px; }
+.table-compromisos tbody td:last-child { border-radius: 0 12px 12px 0; }
+.td-no { font-family: 'Permanent Marker', cursive; font-size: 1.3rem; color: var(--color-4); }
+.td-descripcion { max-width: 350px; }
+.responsables-cell { font-size: 0.85rem; line-height: 1.4; }
+.responsables-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+.responsable-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.6rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  border: 3px solid var(--blue-medium);
+  transition: all 0.25s ease;
+}
+.responsable-mini:hover {
+  background: white;
+  border-color: var(--primary);
+  transform: translateX(6px);
+  box-shadow: 3px 3px 0px var(--primary);
+}
+.mini-avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 3px 10px rgba(0,0,0,.2);
+}
+.mini-info {
+  flex: 1;
+}
+.mini-name {
+  font-family: 'Patrick Hand', cursive;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--primary);
+  display: block;
+  line-height: 1.2;
+}
+.mini-cargo {
+  font-family: 'Caveat', cursive;
+  font-size: 0.9rem;
+  color: #666;
+  display: block;
+  font-style: italic;
+}
+.badge-estado {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+  border-radius: 20px; font-family: 'Patrick Hand', cursive; font-weight: 700; border: 3px solid;
+}
+.badge-estado.cumplido { background: #4CAF5020; color: #4CAF50; border-color: #4CAF50; }
+.badge-estado.proceso { background: #FFC10720; color: #FFC107; border-color: #FFC107; }
+.badge-estado.nocumplido { background: #E5393520; color: #E53935; border-color: #E53935; }
+.btn-accion {
+  padding: 0.6rem; border: none; border-radius: 10px; cursor: pointer;
+  margin: 0 0.3rem; transition: all 0.2s;
+}
+.btn-editar { background: #1976D220; color: #1976D2; }
+.btn-editar:hover { background: #1976D2; color: white; transform: scale(1.1); }
+.btn-eliminar { background: #E5393520; color: #E53935; }
+.btn-eliminar:hover { background: #E53935; color: white; transform: scale(1.1); }
+
+/* MODAL */
+.modal {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; padding: 20px;
+}
+.modal.active { display: flex; }
+.modal-content {
+  background: white; border-radius: 30px; max-width: 900px; width: 100%;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 30px 80px rgba(0,0,0,.4); border: 8px solid var(--primary);
+}
+.modal-header {
+  padding: 2rem; border-bottom: 4px dashed var(--blue-dark); display: flex;
+  justify-content: space-between; align-items: center; background: linear-gradient(135deg, #f8f9fa, #ffffff);
+}
+.modal-header h2 { font-family: 'Permanent Marker', cursive; font-size: 2rem; color: var(--primary); }
+.btn-close-modal {
+  background: var(--orange); border: none; border-radius: 50%; width: 50px; height: 50px;
+  cursor: pointer; color: white; font-size: 1.5rem; transition: all 0.3s;
+}
+.btn-close-modal:hover { background: var(--danger); transform: rotate(90deg) scale(1.1); }
+.modal-body { padding: 2rem; }
+.form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.8rem; }
+.form-group.full-width { grid-column: 1 / -1; }
+.form-group label { font-family: 'Patrick Hand', cursive; font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+.form-group input, .form-group select, .form-group textarea {
+  padding: 1rem; border: 4px solid #ddd; border-radius: 15px;
+  font-family: 'Patrick Hand', cursive; font-size: 1.1rem; transition: all 0.3s;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+  outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(27, 94, 32, 0.2);
+}
+.modal-footer {
+  padding: 2rem; border-top: 4px dashed var(--blue-dark); display: flex;
+  justify-content: flex-end; gap: 1rem; background: linear-gradient(135deg, #f8f9fa, #ffffff);
+}
+.btn-cancelar {
+  padding: 1rem 2rem; border: 4px dashed #999; background: white; color: #666;
+  border-radius: 20px; font-family: 'Patrick Hand', cursive; font-weight: 700;
+  font-size: 1.2rem; cursor: pointer; transition: all 0.3s; box-shadow: 5px 5px 0px #999;
+}
+.btn-cancelar:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0px #999; }
+.btn-guardar {
+  padding: 1rem 2rem; border: 4px solid var(--primary); background: var(--primary);
+  color: white; border-radius: 20px; font-family: 'Patrick Hand', cursive;
+  font-weight: 700; font-size: 1.2rem; cursor: pointer; transition: all 0.3s;
+  box-shadow: 5px 5px 0px rgba(27, 94, 32, 0.5);
+}
+.btn-guardar:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0px rgba(27, 94, 32, 0.5); }
+
+/* LOGIN OVERLAY */
+.login-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #1B5E20 0%, #0D47A1 50%, #00796B 100%);
+  background-size: 400% 400%; animation: gradientShift 20s ease infinite;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 9998; padding: 20px;
+}
+.login-overlay.hidden { display: none; }
+.login-card {
+  background: white; border-radius: 30px; padding: 3rem;
+  max-width: 440px; width: 100%; text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,.5); border: 8px solid var(--primary);
+}
+.login-title {
+  font-family: 'Permanent Marker', cursive; font-size: 2.4rem;
+  color: var(--primary); margin-bottom: 0.3rem;
+}
+.login-subtitle {
+  font-family: 'Patrick Hand', cursive; font-size: 1.1rem;
+  color: #666; margin-bottom: 2rem;
+}
+.login-input {
+  width: 100%; padding: 1rem 1.5rem; border: 4px solid #ddd; border-radius: 15px;
+  font-family: 'Patrick Hand', cursive; font-size: 1.2rem; margin-bottom: 1rem;
+  transition: all 0.3s; box-sizing: border-box;
+}
+.login-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(27,94,32,0.2); }
+.login-btn {
+  width: 100%; padding: 1rem; background: var(--primary); color: white; border: none;
+  border-radius: 20px; font-family: 'Patrick Hand', cursive; font-size: 1.4rem;
+  font-weight: 700; cursor: pointer; transition: all 0.3s;
+  box-shadow: 5px 5px 0px rgba(27,94,32,0.4);
+}
+.login-btn:hover { transform: translate(3px,3px); box-shadow: 2px 2px 0px rgba(27,94,32,0.4); }
+.login-error {
+  background: #ffebee; color: var(--danger); border: 3px solid var(--danger);
+  border-radius: 15px; padding: 1rem; margin-top: 1rem;
+  font-family: 'Patrick Hand', cursive; font-size: 1.1rem; display: none;
+}
+.login-error.show { display: block; }
+
+/* USER INFO BADGE */
+.user-badge {
+  align-items: center; gap: 1rem; background: rgba(255,255,255,0.15);
+  border: 3px solid rgba(255,255,255,0.4); border-radius: 50px;
+  padding: 0.7rem 1.5rem; backdrop-filter: blur(10px);
+}
+.user-email { font-family: 'Patrick Hand', cursive; font-size: 1.1rem; color: var(--primary); font-weight: 700; }
+.user-rol { font-family: 'Caveat', cursive; font-size: 1rem; color: #555; }
+.btn-logout {
+  background: var(--orange); border: none; color: white; border-radius: 50px;
+  padding: 0.5rem 1.2rem; font-family: 'Patrick Hand', cursive; font-size: 1rem;
+  cursor: pointer; transition: all 0.3s; font-weight: 700;
+}
+.btn-logout:hover { background: var(--danger); transform: scale(1.05); }
+
+/* LOADING */
+.loading-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  z-index: 9999;
+}
+.loading-emoji { font-size: 8rem; animation: bounce 1s infinite; }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+.loading-text {
+  font-family: 'Permanent Marker', cursive; font-size: 3rem;
+  color: white; margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .header-title { font-size: 2.5rem; }
+  .tree-branches { grid-template-columns: 1fr; }
+  .charts-section { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV TABLEROS FLOTANTE -->
+<style>
+.nav-tableros{position:fixed;bottom:30px;right:30px;z-index:9999;}
+.nav-tableros-btn{width:56px;height:56px;border-radius:50%;background:var(--primary,#1B5E20);color:white;border:3px solid white;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.35);transition:transform 0.2s;}
+.nav-tableros-btn:hover{transform:scale(1.12);}
+.nav-tableros-menu{display:none;position:absolute;bottom:68px;right:0;background:white;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.22);min-width:230px;border:3px solid var(--primary,#1B5E20);overflow:hidden;}
+.nav-tableros-menu.show{display:block;}
+.nav-tableros-menu-title{background:var(--primary,#1B5E20);color:white;padding:10px 18px;font-weight:700;font-size:13px;letter-spacing:0.5px;}
+.nav-tableros-menu a{display:flex;align-items:center;gap:10px;padding:11px 18px;text-decoration:none;font-weight:600;font-size:14px;color:var(--primary,#1B5E20);border-bottom:1px solid #f0f0f0;transition:background 0.15s;}
+.nav-tableros-menu a:last-child{border-bottom:none;}
+.nav-tableros-menu a:hover{background:#f0fdf4;}
+.nav-tableros-menu a.nav-current{background:#dcfce7;font-weight:800;}
+</style>
+<div class="nav-tableros" id="navTableroPrincipal">
+  <button class="nav-tableros-btn" onclick="document.getElementById('navTableroPrincipal').querySelector('.nav-tableros-menu').classList.toggle('show')" title="Navegar entre tableros">🧭</button>
+  <div class="nav-tableros-menu">
+    <div class="nav-tableros-menu-title">📍 Navegar entre tableros</div>
+    <a href="../index.html">🏠 &nbsp;Inicio</a>
+    <a href="../plan%20de%20desarrollo/plan_de_desarrollo.html">📊 &nbsp;Plan de Desarrollo</a>
+    <a href="../tablero%20hacienda/hacienda.html">💰 &nbsp;Tablero Recaudo</a>
+    <a href="../tablero%20compromisos/dashboard-guatape.html" class="nav-current">📋 &nbsp;Tablero Compromisos</a>
+  </div>
+</div>
+<script>
+document.addEventListener('click',function(e){var n=document.getElementById('navTableroPrincipal');if(n&&!n.contains(e.target)){var m=n.querySelector('.nav-tableros-menu');if(m)m.classList.remove('show');}});
+</script>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-emoji">🌳</div>
+  <div class="loading-text">Cargando datos...</div>
+</div>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div style="font-size: 4rem; margin-bottom: 0.5rem;">🌳</div>
+    <h2 class="login-title">Tablero Compromisos</h2>
+    <p class="login-subtitle">Municipio de Guatapé<br>#JuntosConstruimos</p>
+    <input type="email" id="loginEmail" class="login-input" placeholder="📧 Correo electrónico">
+    <input type="password" id="loginPassword" class="login-input" placeholder="🔒 Contraseña"
+      onkeydown="if(event.key==='Enter') iniciarSesion()">
+    <button class="login-btn" onclick="iniciarSesion()">🚀 Ingresar</button>
+    <div class="login-error" id="loginError">❌ Correo o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- Emojis flotantes -->
+<div class="floating-emoji emoji-1">🌳</div>
+<div class="floating-emoji emoji-2">🎨</div>
+<div class="floating-emoji emoji-3">📊</div>
+<div class="floating-emoji emoji-4">✨</div>
+
+<!-- BARRA DE NAVEGACIÓN ENTRE TABLEROS -->
+<div style="background:var(--primary,#1B5E20);padding:8px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:relative;z-index:20;">
+    <span style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;letter-spacing:1px;margin-right:4px;">📍 TABLEROS:</span>
+    <a href="../index.html" style="color:white;text-decoration:none;background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">🏠 Inicio</a>
+    <a href="../plan%20de%20desarrollo/plan_de_desarrollo.html" style="color:white;text-decoration:none;background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">📊 Plan de Desarrollo</a>
+    <a href="../tablero%20hacienda/hacienda.html" style="color:white;text-decoration:none;background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">💰 Recaudo</a>
+    <span style="color:white;background:rgba(255,255,255,0.3);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:800;border:2px solid rgba(255,255,255,0.6);">📋 Compromisos ✓</span>
+</div>
+
+<div class="container">
+  <div class="header-section">
+    <div class="header-content">
+      <div>
+        <h1 class="header-title">🌳 Tablero Compromisos</h1>
+        <p class="header-subtitle">#JuntosConstruimos - Municipio de Guatapé</p>
+      </div>
+      <div class="user-badge" id="userBadge" style="display:none;">
+        <div>
+          <div class="user-email" id="userEmailDisplay"></div>
+          <div class="user-rol" id="userRolDisplay"></div>
+        </div>
+        <a id="adminLink" href="gestionar-usuarios.html" style="display:none; font-family:'Patrick Hand',cursive; font-size:0.95rem; color:white; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; padding:0.5rem 1rem; text-decoration:none; transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+          <i class="fas fa-users-cog"></i> Gestionar Usuarios
+        </a>
+        <button class="btn-logout" onclick="cerrarSesion()">Salir 🚪</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="year-section">
+    <h2 class="section-title">🎯 Filtrar por Estado</h2>
+    <div class="year-buttons" id="estadoButtons">
+      <button class="year-btn active" onclick="filtrarPorEstado('')">
+        📋 Todos
+      </button>
+      <button class="year-btn" onclick="filtrarPorEstado('CUMPLIDO')">
+        ✅ Cumplidos
+      </button>
+      <button class="year-btn" onclick="filtrarPorEstado('RIESGO')">
+        ⏳ En Proceso
+      </button>
+      <button class="year-btn" onclick="filtrarPorEstado('VENCIDO')">
+        ❌ No Cumplidos
+      </button>
+    </div>
+  </div>
+
+  <!-- SEGMENTADOR POR RESPONSABLE - DROPDOWN -->
+  <div class="year-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <h2 class="section-title" style="margin-bottom: 0;">👤 Filtrar por Responsable</h2>
+      <button class="btn-limpiar-filtros" onclick="limpiarTodosFiltros()">
+        <i class="fa-solid fa-filter-circle-xmark"></i>
+        Limpiar Filtros
+      </button>
+    </div>
+    <div class="dropdown-container">
+      <button class="dropdown-button" id="dropdownButton" onclick="toggleDropdown()">
+        <span id="selectedResponsable">👥 Todos los Responsables</span>
+        <i class="fa-solid fa-chevron-down dropdown-icon" id="dropdownIcon"></i>
+      </button>
+      <div class="dropdown-menu" id="dropdownMenu">
+        <div class="dropdown-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="dropdownSearch" placeholder="Buscar responsable..." onkeyup="filtrarDropdown()">
+        </div>
+        <div class="dropdown-items" id="dropdownItems">
+          <!-- Los items se cargan dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-section">
+    <div class="status-card all">
+      <div class="status-card-content">
+        <span class="status-icon">📋</span>
+        <span class="status-label">Total</span>
+        <span class="status-count" id="countTotal">0</span>
+      </div>
+    </div>
+    <div class="status-card success">
+      <div class="status-card-content">
+        <span class="status-icon">✅</span>
+        <span class="status-label">Cumplidos</span>
+        <span class="status-count" id="countCumplidos">0</span>
+      </div>
+    </div>
+    <div class="status-card warning">
+      <div class="status-card-content">
+        <span class="status-icon">⏳</span>
+        <span class="status-label">En Proceso</span>
+        <span class="status-count" id="countProceso">0</span>
+      </div>
+    </div>
+    <div class="status-card danger">
+      <div class="status-card-content">
+        <span class="status-icon">❌</span>
+        <span class="status-label">No Cumplidos</span>
+        <span class="status-count" id="countNoCumplidos">0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tree-section">
+    <h2 class="tree-title">👥 Todos los Responsables</h2>
+    <div class="tree-branches" id="topResponsables"></div>
+  </div>
+
+  <div class="charts-section">
+    <div class="chart-card">
+      <h3 class="chart-title">📊 Estado de Compromisos</h3>
+      <div id="chartEstado" style="width: 100%; height: 400px;"></div>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-title">📈 Cumplimiento por Responsable</h3>
+      <div id="chartResp" style="width: 100%; height: 400px;"></div>
+    </div>
+  </div>
+
+  <div class="table-section">
+    <div class="table-header">
+      <h3 class="table-title">📋 Lista de Compromisos</h3>
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="searchInput" placeholder="🔍 Buscar compromiso..." onkeyup="buscarCompromiso()">
+      </div>
+    </div>
+    <div class="table-container">
+      <table class="table-compromisos">
+        <thead>
+          <tr>
+            <th>📝 Descripción</th>
+            <th>👥 Responsables</th>
+            <th>📅 Reunión</th>
+            <th>📆 Asignada</th>
+            <th>✅ Cumplimiento</th>
+            <th>🎯 Estado</th>
+            <th>⭐ Valoración</th>
+            <th>⚙️ Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>✏️ Editar Compromiso</h2>
+      <button class="btn-close-modal" onclick="cerrarModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full-width">
+          <label>📝 Descripción</label>
+          <textarea id="editDescripcion" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>📅 Fecha Reunión</label>
+          <input type="date" id="editFechaReunion">
+        </div>
+        <div class="form-group">
+          <label>📆 Fecha Asignada</label>
+          <input type="date" id="editFechaAsignada">
+        </div>
+        <div class="form-group">
+          <label>✅ Fecha Cumplimiento</label>
+          <input type="date" id="editFechaCumplimiento">
+        </div>
+        <div class="form-group">
+          <label>🎯 Estado</label>
+          <select id="editEstado">
+            <option value="Si">Cumplido</option>
+            <option value="No">No Cumplido</option>
+            <option value="En proceso">En Proceso</option>
+            <option value="En término">En Término</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label>⭐ Valoración</label>
+          <select id="editValoracion">
+            <option value="">Sin valoración</option>
+            <option value="Oportuno">Oportuno</option>
+            <option value="Extemporáneo">Extemporáneo</option>
+          </select>
+        </div>
+        <div class="form-group full-width">
+          <label>👤 Responsable 1</label>
+          <select id="editResponsable1"></select>
+        </div>
+        <div class="form-group full-width">
+          <label>👤 Responsable 2 <small style="font-weight:normal;color:#999">(opcional)</small></label>
+          <select id="editResponsable2"></select>
+        </div>
+        <div class="form-group full-width">
+          <label>👤 Responsable 3 <small style="font-weight:normal;color:#999">(opcional)</small></label>
+          <select id="editResponsable3"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancelar" onclick="cerrarModal()">❌ Cancelar</button>
+      <button class="btn-guardar" onclick="guardarCambios()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { getFirestore, collection, getDocs, updateDoc, doc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyBEYH9mlu_Jg41iQq2gAsdVlvlpggvoObQ",
+  authDomain: "compromisos-22fa4.firebaseapp.com",
+  projectId: "compromisos-22fa4"
+});
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+// BASE DE DATOS SECRETARIOS - ORGANIZADO POR CARGO (como están en Firebase)
+const secretarios = {
+  "Alcalde Municipal": {
+    nombre: "David Esteban Franco Vallejo",
+    foto: "https://lh3.googleusercontent.com/d/1wWdo4icMpCuDcDOWDREX5R9lB2Z4MJ6u"
+  },
+  "Secretario de Gobierno y Servicios Administrativos": {
+    nombre: "Carlos Hernán Espinosa Correa",
+    foto: "https://lh3.googleusercontent.com/d/1X2oX6Rf4L6SQ2KcSi_ae2l5nQqP9oFpk"
+  },
+  "Secretaria de Planeación y Obras Públicas": {
+    nombre: "Velkis Neivany Galeano Marín",
+    foto: "https://lh3.googleusercontent.com/d/1f9i4lCtMsiWQVeMstnFvST4zc8Vx11tx"
+  },
+  "Secretaria de Hacienda": {
+    nombre: "Durley Arelis Ramírez Zuluaga",
+    foto: "https://lh3.googleusercontent.com/d/1ycgAmBnhRZW4E1Y1ADPi-LJHxqofNhRw"
+  },
+  "Secretaria de Turismo y Desarrollo Económico": {
+    nombre: "Edison Alejandro Jaramillo Gómez",
+    foto: "https://lh3.googleusercontent.com/d/1NVXoxfgbvj3hhGQ0ARKmXvW-X7YEUfVL"
+  },
+  "Secretaria de Bienestar y Desarrollo Social": {
+    nombre: "Yésica Paola Suárez Hernández",
+    foto: "https://lh3.googleusercontent.com/d/1pdmqdni5_mtmcrR4YCzwdlO9oD1tUdoq"
+  },
+  "Secretaria de Medio Ambiente y Desarrollo Rural": {
+    nombre: "Marisol Jaramillo Duque",
+    foto: "https://lh3.googleusercontent.com/d/1HudbtqC71j2ccrh-KnxhEBUwrWzXPuVU"
+  },
+  "Secretaria de Medio Ambiente y Desarrollo Rural/Gestión del Riesgo": {
+    nombre: "Marisol Jaramillo Duque",
+    foto: "https://lh3.googleusercontent.com/d/1HudbtqC71j2ccrh-KnxhEBUwrWzXPuVU"
+  },
+  "Gerente Empresa de Servicios Públicos Domiciliarios ESP": {
+    nombre: "Mauricio Hernández Jiménez",
+    foto: "https://lh3.googleusercontent.com/d/1kEy99ZT1TRuMA1_1C7fGiyPH2VsotRzZ"
+  },
+  "Gerente Empresa Social del Estado ESE Hospital La Inmaculada.": {
+    nombre: "Jaime Arturo Cárdenas Rivera",
+    foto: "https://lh3.googleusercontent.com/d/1rq8ivmgDETjUbqszFTEn5JBH0C8OdcQ1"
+  },
+  "Jefe Oficina de Espacio Público": {
+    nombre: "Tatiana Caicedo Coral",
+    foto: "https://lh3.googleusercontent.com/d/1FGuzf3KAYSlSBDzuiOCsedODCdA_jMdr"
+  },
+  "Subsecretario de Obras Públicas y Vivienda": {
+    nombre: "Lina Johana Arboleda Alzate",
+    foto: "https://lh3.googleusercontent.com/d/1aybfp108rCyF6uGlNY1V0OCYbf5nKXO5"
+  },
+  "Subsecretaria de Desarrollo Territorial y Planeación Estratégica": {
+    nombre: "Natalia Loaiza Correa",
+    foto: "https://lh3.googleusercontent.com/d/16nGyWRa0Ru9AYNlLGMVm-xeyq0ttxQ_h"
+  },
+  "Jefe Oficina Asesora de Comunicaciones": {
+    nombre: "María Alejandra Martínez Cárdenas",
+    foto: "https://lh3.googleusercontent.com/d/1UYfusLhONdmDE_mb59XTbamjD3OESni9"
+  },
+  "Subsecretario de Educación": {
+    nombre: "Janeth Amparo Londoño Ramírez",
+    foto: "https://lh3.googleusercontent.com/d/1RR5AwaqO0L6GWWxZffsp9f7_SHUbFhdx"
+  },
+  "Subsecretario de Deportes": {
+    nombre: "Oscar Eduardo Usme Sánchez",
+    foto: "https://lh3.googleusercontent.com/d/1SdmNiJ7iUFNis_rw_SWS_rAtm4FDRwas"
+  },
+  "Subsecretario de Cultura": {
+    nombre: "Fredy Alexánder Arcila Hincapié",
+    foto: "https://lh3.googleusercontent.com/d/1wVT7WuhhReKejvnnqLmFJ-e3kqm9Hj9d"
+  },
+  "Directora Local de Salud": {
+    nombre: "Liza María Bedoya Ospina",
+    foto: "https://lh3.googleusercontent.com/d/1BTgypyNFL9DrJ5-WuLn10xXS_wdG5Phg"
+  },
+  "Secretaria Alcalde": {
+    nombre: "Cristina Jaramillo Vásquez",
+    foto: "https://lh3.googleusercontent.com/d/1OmtKQQdk2ZrK0AfSnp_DigJyUFs8jBGD"
+  },
+  "Jefe Oficina Control Interno": {
+    nombre: "Adela Jaramillo Rincón",
+    foto: "https://lh3.googleusercontent.com/d/1Zaqhxuxieh-AMVKldYG3Yfb42WRW4F9G"
+  },
+  "Asesor TIC": {
+    nombre: "Yeison David Giraldo Tabares",
+    foto: "https://lh3.googleusercontent.com/d/1soCSbm9bcqv48WuxqC2uRUYuf4lkQ-sS"
+  },
+  "Asesora de Emprendimiento": {
+    nombre: "Ana María Gómez Salazar",
+    foto: "https://lh3.googleusercontent.com/d/1b4zX4pP4jJasYLHUY7O5blYZcmMB-Mal"
+  },
+  "Técnico Operativo Gestión Humana": {
+    nombre: "Yolanda Rincón Espinosa",
+    foto: "https://lh3.googleusercontent.com/d/1xktIErXiI1ePcEmVKhUKQRoNH0pYjbfe"
+  },
+  "Luis Fernando Jiménez Contratista Secretaría de Gobierno": {
+    nombre: "Luis Fernando Jiménez Contratista Secretaría de Gobierno",
+    foto: "https://lh3.googleusercontent.com/d/1nG71pUHIAlxaWnpBGVPahozK2lPvooSQ"
+  },
+  "Edwin Marín Hernández": {
+    nombre: "Edwin Marín Hernández",
+    foto: "https://lh3.googleusercontent.com/d/1xgwSQtCRb9xYHSe_mraAylP1_0xVof6n"
+  },
+  "Asesor": {
+    nombre: "Camilo Hincapié Hernández",
+    foto: "https://lh3.googleusercontent.com/d/1o2Y8B5iCbE8rISnquFQ8CA24p23YnRXD"
+  },
+  "Jefe de Oficina Gestión del Riesgo": {
+    nombre: "Yulieth Vergara Jiménez",
+    foto: "https://lh3.googleusercontent.com/d/1fVjty8W79rvejgvarK5eEBl7JYBfABh_"
+  },
+  "Gerente Empresa Autónoma de Guatapé EAG": {
+    nombre: "Gerente EAG",
+    foto: "https://ui-avatars.com/api/?name=Gerente+EAG&background=8338EC&color=fff&size=200&bold=true"
+  },
+  "Inspeccion de Policia y transito": {
+    nombre: "Inspección de Policía",
+    foto: "https://ui-avatars.com/api/?name=Inspección+de+Policía&background=8338EC&color=fff&size=200&bold=true"
+  },
+  "Todas las Secretarías": {
+    nombre: "Todas las Secretarías",
+    foto: "https://ui-avatars.com/api/?name=Todas+las+Secretarías&background=8338EC&color=fff&size=200&bold=true"
+  }
+};
+
+let allData = [];
+let filteredData = [];
+let estadoSeleccionado = '';
+let compromisoEditando = null;
+let chartEstado, chartResp;
+let usuarioRol = null;
+let responsableSeleccionado = null;
+let responsableSegmentadorSeleccionado = '';
+
+const estadoMap = c => c === "Si" ? "CUMPLIDO" : c === "En proceso" ? "RIESGO" : "VENCIDO";
+
+// CARGAR DATOS DE FIREBASE
+const cargarDatos = async () => {
+  document.getElementById('loadingOverlay').style.display = 'flex';
+  
+  try {
+    const snap = await getDocs(collection(db, "compromisos"));
+    allData = [];
+    
+    snap.forEach(d => {
+      const c = d.data();
+      
+      // Función helper para normalizar fechas
+      const normalizarFecha = (fecha) => {
+        if (!fecha) return null;
+        // Si viene como string (formato más común de Firebase)
+        if (typeof fecha === 'string') return fecha;
+        // Si viene como Timestamp de Firestore
+        if (fecha.seconds) {
+          const date = new Date(fecha.seconds * 1000);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+        // Si viene como Date object
+        if (fecha instanceof Date) {
+          const year = fecha.getFullYear();
+          const month = String(fecha.getMonth() + 1).padStart(2, '0');
+          const day = String(fecha.getDate()).padStart(2, '0');
+          return `${year}-${month}-${day}`;
+        }
+        return null;
+      };
+      
+      allData.push({
+        id: d.id,
+        descripcion: c.descripcion || '',
+        responsable1: c.responsable1 || '',
+        responsable2: c.responsable2 || '',
+        responsable3: c.responsable3 || '',
+        responsables: [c.responsable1, c.responsable2, c.responsable3].filter(Boolean),
+        estado: c.cumplimiento || '',
+        valoracion: c.valoracionCumplimiento || '',
+        fechaReunion: normalizarFecha(c.fechaReunion),
+        fechaAsignada: normalizarFecha(c.fechaAsignada),
+        fechaCumplimiento: normalizarFecha(c.fechaCumplimiento)
+      });
+    });
+    
+    console.log(`✅ ${allData.length} compromisos cargados de Firebase`);
+    console.log('📅 Ejemplo de fechas:', allData[0]);
+    
+    cargarResponsables();
+    inicializarGraficos();
+    aplicarFiltros();
+    
+  } catch (error) {
+    console.error('❌ Error cargando datos:', error);
+    alert('Error al cargar datos de Firebase');
+  } finally {
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+};
+
+// FUNCIÓN PARA FILTRAR POR ESTADO
+window.filtrarPorEstado = function(estado) {
+  estadoSeleccionado = estado;
+  
+  // Actualizar botones activos
+  document.querySelectorAll('#estadoButtons .year-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  aplicarFiltros();
+};
+
+function cargarResponsables() {
+  // Obtener todos los responsables únicos con conteo
+  const responsablesData = {};
+  allData.forEach(c => {
+    c.responsables.forEach(cargo => {
+      if (!responsablesData[cargo]) {
+        responsablesData[cargo] = {
+          cargo: cargo,
+          count: 0,
+          info: secretarios[cargo] || { 
+            nombre: cargo, 
+            foto: `https://ui-avatars.com/api/?name=${encodeURIComponent(cargo.substring(0, 20))}&background=1B5E20&color=fff&size=80` 
+          }
+        };
+      }
+      responsablesData[cargo].count++;
+    });
+  });
+  
+  // Ordenar por nombre
+  const responsablesArray = Object.values(responsablesData).sort((a, b) => 
+    a.info.nombre.localeCompare(b.info.nombre)
+  );
+  
+  const dropdownItems = document.getElementById('dropdownItems');
+  dropdownItems.innerHTML = '';
+  
+  // Item "Todos"
+  const itemTodos = document.createElement('div');
+  itemTodos.className = 'dropdown-item active';
+  itemTodos.onclick = () => seleccionarResponsableDropdown('', '👥 Todos los Responsables');
+  itemTodos.innerHTML = `
+    <div class="dropdown-item-avatar" style="background: linear-gradient(135deg, var(--primary), var(--blue-dark)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+      👥
+    </div>
+    <div class="dropdown-item-info">
+      <span class="dropdown-item-name">Todos los Responsables</span>
+      <span class="dropdown-item-cargo">Ver todos los compromisos</span>
+    </div>
+    <div class="dropdown-item-badge">${allData.length}</div>
+  `;
+  dropdownItems.appendChild(itemTodos);
+  
+  // Items de responsables
+  responsablesArray.forEach(({ cargo, count, info }) => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item';
+    item.dataset.cargo = cargo;
+    item.dataset.nombre = info.nombre.toLowerCase();
+    item.onclick = () => seleccionarResponsableDropdown(cargo, info.nombre);
+    
+    item.innerHTML = `
+      <img src="${info.foto}" alt="${info.nombre}" class="dropdown-item-avatar">
+      <div class="dropdown-item-info">
+        <span class="dropdown-item-name">${info.nombre}</span>
+        <span class="dropdown-item-cargo">${cargo}</span>
+      </div>
+      <div class="dropdown-item-badge">${count}</div>
+    `;
+    
+    dropdownItems.appendChild(item);
+  });
+}
+
+// Función para toggle del dropdown
+window.toggleDropdown = function() {
+  const menu = document.getElementById('dropdownMenu');
+  const button = document.getElementById('dropdownButton');
+  
+  menu.classList.toggle('show');
+  button.classList.toggle('active');
+  
+  // Si se abre, enfocar el buscador
+  if (menu.classList.contains('show')) {
+    setTimeout(() => {
+      document.getElementById('dropdownSearch').focus();
+    }, 100);
+  }
+};
+
+// Cerrar dropdown al hacer click fuera
+document.addEventListener('click', function(event) {
+  const dropdown = document.querySelector('.dropdown-container');
+  if (dropdown && !dropdown.contains(event.target)) {
+    document.getElementById('dropdownMenu').classList.remove('show');
+    document.getElementById('dropdownButton').classList.remove('active');
+  }
+});
+
+// Función para filtrar items del dropdown
+window.filtrarDropdown = function() {
+  const searchTerm = document.getElementById('dropdownSearch').value.toLowerCase();
+  const items = document.querySelectorAll('.dropdown-item');
+  
+  items.forEach(item => {
+    const nombre = item.dataset.nombre || '';
+    const cargo = item.dataset.cargo || '';
+    
+    if (nombre.includes(searchTerm) || cargo.toLowerCase().includes(searchTerm)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+};
+
+// Función para seleccionar responsable del dropdown
+window.seleccionarResponsableDropdown = function(cargo, nombreDisplay) {
+  responsableSegmentadorSeleccionado = cargo;
+  
+  // Actualizar texto del botón
+  document.getElementById('selectedResponsable').textContent = nombreDisplay;
+  
+  // Actualizar items activos
+  document.querySelectorAll('.dropdown-item').forEach(item => {
+    item.classList.remove('active');
+    if (item.dataset.cargo === cargo || (cargo === '' && item.querySelector('.dropdown-item-name').textContent === '👥 Todos los Responsables')) {
+      item.classList.add('active');
+    }
+  });
+  
+  // Cerrar dropdown
+  document.getElementById('dropdownMenu').classList.remove('show');
+  document.getElementById('dropdownButton').classList.remove('active');
+  
+  // Limpiar búsqueda
+  document.getElementById('dropdownSearch').value = '';
+  filtrarDropdown();
+  
+  // Limpiar selección de tarjetas
+  document.querySelectorAll('.branch-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  responsableSeleccionado = null;
+  
+  // Aplicar filtros
+  aplicarFiltros();
+};
+
+// FUNCIÓN PARA LIMPIAR TODOS LOS FILTROS
+window.limpiarTodosFiltros = function() {
+  // Resetear variables
+  estadoSeleccionado = '';
+  responsableSeleccionado = null;
+  responsableSegmentadorSeleccionado = '';
+  
+  // Resetear botones de estado
+  document.querySelectorAll('#estadoButtons .year-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.textContent.includes('Todos')) {
+      btn.classList.add('active');
+    }
+  });
+  
+  // Resetear dropdown a "Todos"
+  document.getElementById('selectedResponsable').textContent = '👥 Todos los Responsables';
+  document.querySelectorAll('.dropdown-item').forEach(item => {
+    item.classList.remove('active');
+    if (item.querySelector('.dropdown-item-name') && 
+        item.querySelector('.dropdown-item-name').textContent === 'Todos los Responsables') {
+      item.classList.add('active');
+    }
+  });
+  
+  // Limpiar selección de tarjetas
+  document.querySelectorAll('.branch-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  // Aplicar filtros (sin filtros = mostrar todo)
+  aplicarFiltros();
+  
+  // Scroll suave al inicio
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+function aplicarFiltros() {
+  filteredData = allData.filter(c => {
+    // Filtro por estado
+    if (estadoSeleccionado !== '') {
+      const estadoCompromiso = estadoMap(c.estado);
+      if (estadoCompromiso !== estadoSeleccionado) return false;
+    }
+    
+    // Filtro por responsable del segmentador
+    if (responsableSegmentadorSeleccionado !== '') {
+      if (!c.responsables.includes(responsableSegmentadorSeleccionado)) return false;
+    }
+    
+    return true;
+  });
+  
+  actualizarEstadisticas();
+  actualizarTopResponsables();
+  actualizarTabla();
+  if (chartEstado && chartResp) actualizarGraficos();
+}
+
+function actualizarEstadisticas() {
+  document.getElementById('countTotal').textContent = filteredData.length;
+  document.getElementById('countCumplidos').textContent = filteredData.filter(c => estadoMap(c.estado) === 'CUMPLIDO').length;
+  document.getElementById('countProceso').textContent = filteredData.filter(c => estadoMap(c.estado) === 'RIESGO').length;
+  document.getElementById('countNoCumplidos').textContent = filteredData.filter(c => estadoMap(c.estado) === 'VENCIDO').length;
+}
+
+function actualizarTopResponsables() {
+  const conteo = {};
+  const stats = {};
+  
+  filteredData.forEach(c => {
+    c.responsables.forEach(resp => {
+      if (!conteo[resp]) {
+        conteo[resp] = 0;
+        stats[resp] = { total: 0, cumplidos: 0, pendientes: 0 };
+      }
+      conteo[resp]++;
+      stats[resp].total++;
+      if (estadoMap(c.estado) === 'CUMPLIDO') stats[resp].cumplidos++;
+      else stats[resp].pendientes++;
+    });
+  });
+  
+  // TODOS los responsables ordenados por total (no solo top 10)
+  const todosResp = Object.entries(conteo)
+    .sort((a, b) => b[1] - a[1]);
+  
+  const container = document.getElementById('topResponsables');
+  container.innerHTML = '';
+  
+  todosResp.forEach(([cargo, count], index) => {
+    const info = secretarios[cargo] || {
+      nombre: cargo,
+      foto: `https://ui-avatars.com/api/?name=${encodeURIComponent(cargo.substring(0, 20))}&background=8338EC&color=fff&size=200`
+    };
+    
+    const stat = stats[cargo];
+    
+    container.innerHTML += `
+      <div class="branch-item" onclick="filtrarPorResponsable('${cargo.replace(/'/g, "\\'")}')">
+        <div class="responsable-rank">#${index + 1}</div>
+        <img src="${info.foto}" alt="${info.nombre}" class="responsable-photo">
+        <div class="responsable-name">${info.nombre}</div>
+        <div class="responsable-cargo">${cargo}</div>
+        <div class="responsable-stats">
+          <div class="mini-stat total">
+            <span class="mini-stat-icon">📋</span>
+            <span class="mini-stat-value">${stat.total}</span>
+            <span class="mini-stat-label">Total</span>
+          </div>
+          <div class="mini-stat cumplido">
+            <span class="mini-stat-icon">✅</span>
+            <span class="mini-stat-value">${stat.cumplidos}</span>
+            <span class="mini-stat-label">Cumplidos</span>
+          </div>
+          <div class="mini-stat proceso">
+            <span class="mini-stat-icon">⏳</span>
+            <span class="mini-stat-value">${stat.pendientes}</span>
+            <span class="mini-stat-label">Pendientes</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+window.filtrarPorResponsable = function(cargo) {
+  document.querySelectorAll('.branch-item').forEach(item => {
+    item.classList.remove('active');
+  });
+  
+  if (responsableSeleccionado === cargo) {
+    // Deseleccionar
+    responsableSeleccionado = null;
+    responsableSegmentadorSeleccionado = '';
+    
+    // Resetear dropdown a "Todos"
+    document.getElementById('selectedResponsable').textContent = '👥 Todos los Responsables';
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+      item.classList.remove('active');
+      if (item.querySelector('.dropdown-item-name').textContent === 'Todos los Responsables') {
+        item.classList.add('active');
+      }
+    });
+    
+    aplicarFiltros();
+  } else {
+    // Seleccionar
+    responsableSeleccionado = cargo;
+    responsableSegmentadorSeleccionado = cargo;
+    event.currentTarget.classList.add('active');
+    
+    // Sincronizar con el dropdown
+    const info = secretarios[cargo] || { nombre: cargo };
+    document.getElementById('selectedResponsable').textContent = info.nombre;
+    
+    document.querySelectorAll('.dropdown-item').forEach(item => {
+      item.classList.remove('active');
+      if (item.dataset.cargo === cargo) {
+        item.classList.add('active');
+      }
+    });
+    
+    // Filtrar datos
+    filteredData = allData.filter(c => {
+      // Filtro por estado
+      let cumpleEstado = estadoSeleccionado === '';
+      if (estadoSeleccionado !== '') {
+        cumpleEstado = estadoMap(c.estado) === estadoSeleccionado;
+      }
+      
+      return cumpleEstado && c.responsables.includes(responsableSeleccionado);
+    });
+    
+    actualizarTabla();
+    actualizarEstadisticas();
+    if (chartEstado && chartResp) actualizarGraficos();
+  }
+  
+  setTimeout(() => {
+    const tabla = document.querySelector('.table-section');
+    tabla.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    tabla.style.animation = 'highlightTable 0.5s ease';
+    setTimeout(() => { tabla.style.animation = ''; }, 500);
+  }, 100);
+};
+
+function actualizarTabla() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  
+  filteredData.forEach(c => {
+    const responsablesHTML = c.responsables.map(cargo => {
+      const info = secretarios[cargo] || {
+        nombre: cargo,
+        foto: `https://ui-avatars.com/api/?name=${encodeURIComponent(cargo.substring(0, 20))}&background=8338EC&color=fff&size=200`
+      };
+      
+      return `
+        <div class="responsable-mini">
+          <img src="${info.foto}" alt="${info.nombre}" class="mini-avatar">
+          <div class="mini-info">
+            <span class="mini-name">${info.nombre}</span>
+            <span class="mini-cargo">${cargo}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+    
+    const estado = estadoMap(c.estado);
+    const estadoClass = estado === 'CUMPLIDO' ? 'cumplido' : estado === 'RIESGO' ? 'proceso' : 'nocumplido';
+    const estadoIcon = estado === 'CUMPLIDO' ? '✅' : estado === 'RIESGO' ? '⏳' : '❌';
+    
+    // Función para formatear fechas correctamente
+    const formatFecha = (fechaStr) => {
+      if (!fechaStr) return '-';
+      try {
+        // Si la fecha viene como string ISO (YYYY-MM-DD)
+        if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+          const [year, month, day] = fechaStr.split('T')[0].split('-');
+          return `${day}/${month}/${year}`;
+        }
+        // Si viene como timestamp de Firebase
+        if (fechaStr.seconds) {
+          const date = new Date(fechaStr.seconds * 1000);
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        }
+        // Si viene como Date object
+        const date = new Date(fechaStr);
+        if (!isNaN(date.getTime())) {
+          const day = String(date.getDate()).padStart(2, '0');
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const year = date.getFullYear();
+          return `${day}/${month}/${year}`;
+        }
+        return '-';
+      } catch (e) {
+        return '-';
+      }
+    };
+    
+    tbody.innerHTML += `
+      <tr id="compromiso-${c.id}">
+        <td class="td-descripcion">${c.descripcion}</td>
+        <td>
+          <div class="responsables-grid">
+            ${responsablesHTML}
+          </div>
+        </td>
+        <td>${formatFecha(c.fechaReunion)}</td>
+        <td>${formatFecha(c.fechaAsignada)}</td>
+        <td>${formatFecha(c.fechaCumplimiento)}</td>
+        <td><span class="badge-estado ${estadoClass}">${estadoIcon} ${estado}</span></td>
+        <td>${c.valoracion || '-'}</td>
+        <td>
+          ${(usuarioRol === 'editor' || usuarioRol === 'admin') ? `
+          <button class="btn-accion btn-editar" onclick="abrirModalEdicion('${c.id}')" title="Editar">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+          ${usuarioRol === 'admin' ? `
+          <button class="btn-accion btn-eliminar" onclick="eliminarCompromiso('${c.id}')" title="Eliminar">
+            <i class="fa-solid fa-trash"></i>
+          </button>` : ''}` : `<span title="Solo lectura" style="color:#bbb; font-size:1.3rem; cursor:default;">👁️</span>`}
+        </td>
+      </tr>
+    `;
+  });
+}
+
+window.buscarCompromiso = function() {
+  const termino = document.getElementById('searchInput').value.toLowerCase();
+  if (!termino) { aplicarFiltros(); return; }
+  
+  filteredData = allData.filter(c => {
+    // Aplicar filtro de estado si está activo
+    if (estadoSeleccionado !== '') {
+      const estadoCompromiso = estadoMap(c.estado);
+      if (estadoCompromiso !== estadoSeleccionado) return false;
+    }
+    
+    // Aplicar filtro de responsable si está activo
+    if (responsableSegmentadorSeleccionado !== '') {
+      if (!c.responsables.includes(responsableSegmentadorSeleccionado)) return false;
+    }
+    
+    // Buscar en descripción o responsables
+    return c.descripcion.toLowerCase().includes(termino) ||
+           c.responsables.some(r => r.toLowerCase().includes(termino));
+  });
+  
+  actualizarTabla();
+  actualizarEstadisticas();
+  if (chartEstado && chartResp) actualizarGraficos();
+};
+
+function poblarSelectsResponsables() {
+  const cargos = Object.keys(secretarios).sort((a, b) =>
+    secretarios[a].nombre.localeCompare(secretarios[b].nombre)
+  );
+  const opciones = `<option value="">— Sin responsable —</option>` +
+    cargos.map(cargo =>
+      `<option value="${cargo}">${secretarios[cargo].nombre} — ${cargo}</option>`
+    ).join('');
+  ['editResponsable1', 'editResponsable2', 'editResponsable3'].forEach(id => {
+    document.getElementById(id).innerHTML = opciones;
+  });
+}
+
+window.abrirModalEdicion = function(id) {
+  compromisoEditando = allData.find(c => c.id === id);
+  
+  // Función para convertir fecha a formato input date (YYYY-MM-DD)
+  const toInputDate = (fechaStr) => {
+    if (!fechaStr) return '';
+    try {
+      // Si viene como timestamp de Firebase
+      if (fechaStr.seconds) {
+        const date = new Date(fechaStr.seconds * 1000);
+        return date.toISOString().split('T')[0];
+      }
+      // Si viene como string ISO
+      if (typeof fechaStr === 'string' && fechaStr.includes('-')) {
+        return fechaStr.split('T')[0];
+      }
+      // Si viene como Date
+      const date = new Date(fechaStr);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+      return '';
+    } catch (e) {
+      return '';
+    }
+  };
+  
+  document.getElementById('editDescripcion').value = compromisoEditando.descripcion;
+  document.getElementById('editFechaReunion').value = toInputDate(compromisoEditando.fechaReunion);
+  document.getElementById('editFechaAsignada').value = toInputDate(compromisoEditando.fechaAsignada);
+  document.getElementById('editFechaCumplimiento').value = toInputDate(compromisoEditando.fechaCumplimiento);
+  document.getElementById('editEstado').value = compromisoEditando.estado;
+  document.getElementById('editValoracion').value = compromisoEditando.valoracion || '';
+  poblarSelectsResponsables();
+  document.getElementById('editResponsable1').value = compromisoEditando.responsable1 || '';
+  document.getElementById('editResponsable2').value = compromisoEditando.responsable2 || '';
+  document.getElementById('editResponsable3').value = compromisoEditando.responsable3 || '';
+  document.getElementById('modal').classList.add('active');
+};
+
+window.cerrarModal = function() {
+  document.getElementById('modal').classList.remove('active');
+  compromisoEditando = null;
+};
+
+window.guardarCambios = async function() {
+  if (!compromisoEditando) return;
+  if (usuarioRol !== 'editor' && usuarioRol !== 'admin') {
+    alert('❌ No tienes permisos para editar compromisos');
+    return;
+  }
+
+  try {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+    
+    await updateDoc(doc(db, "compromisos", compromisoEditando.id), {
+      descripcion: document.getElementById('editDescripcion').value,
+      fechaReunion: document.getElementById('editFechaReunion').value,
+      fechaAsignada: document.getElementById('editFechaAsignada').value,
+      fechaCumplimiento: document.getElementById('editFechaCumplimiento').value,
+      cumplimiento: document.getElementById('editEstado').value,
+      valoracionCumplimiento: document.getElementById('editValoracion').value,
+      responsable1: document.getElementById('editResponsable1').value,
+      responsable2: document.getElementById('editResponsable2').value,
+      responsable3: document.getElementById('editResponsable3').value
+    });
+    
+    alert('✅ Compromiso actualizado exitosamente');
+    cerrarModal();
+    await cargarDatos();
+    
+  } catch (error) {
+    console.error('Error:', error);
+    alert('❌ Error al guardar cambios');
+  } finally {
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+};
+
+function inicializarGraficos() {
+  chartEstado = echarts.init(document.getElementById('chartEstado'));
+  chartResp = echarts.init(document.getElementById('chartResp'));
+  actualizarGraficos();
+}
+
+function actualizarGraficos() {
+  const cumplidos = filteredData.filter(c => estadoMap(c.estado) === 'CUMPLIDO').length;
+  const enProceso = filteredData.filter(c => estadoMap(c.estado) === 'RIESGO').length;
+  const noCumplidos = filteredData.filter(c => estadoMap(c.estado) === 'VENCIDO').length;
+  
+  chartEstado.setOption({
+    tooltip: { trigger: 'item' },
+    legend: { bottom: '5%', left: 'center' },
+    series: [{
+      type: 'pie',
+      radius: ['45%', '75%'],
+      itemStyle: { borderRadius: 18, borderColor: '#fff', borderWidth: 6 },
+      data: [
+        { name: 'Cumplidos', value: cumplidos, itemStyle: { color: '#4CAF50' } },
+        { name: 'En Proceso', value: enProceso, itemStyle: { color: '#FFC107' } },
+        { name: 'No Cumplidos', value: noCumplidos, itemStyle: { color: '#E53935' } }
+      ]
+    }]
+  });
+  
+  const conteoResp = {};
+  filteredData.forEach(c => {
+    c.responsables.forEach(r => {
+      conteoResp[r] = (conteoResp[r] || 0) + 1;
+    });
+  });
+  
+  const topResp = Object.entries(conteoResp)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+  
+  chartResp.setOption({
+    tooltip: { trigger: 'axis' },
+    xAxis: {
+      type: 'category',
+      data: topResp.map(r => {
+        const info = secretarios[r[0]];
+        return info ? info.nombre : r[0].substring(0, 20);
+      }),
+      axisLabel: { interval: 0, rotate: 45, fontSize: 11 }
+    },
+    yAxis: { type: 'value' },
+    series: [{
+      type: 'bar',
+      data: topResp.map(r => ({
+        value: r[1],
+        itemStyle: { color: '#1B5E20', borderRadius: [18, 18, 0, 0] }
+      })),
+      barWidth: '60%'
+    }]
+  });
+}
+
+window.addEventListener('resize', () => {
+  if (chartEstado) chartEstado.resize();
+  if (chartResp) chartResp.resize();
+});
+
+// ======== AUTH ========
+
+window.iniciarSesion = async function() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorEl = document.getElementById('loginError');
+  errorEl.classList.remove('show');
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    errorEl.classList.add('show');
+    console.error('Error login:', error.code);
+  }
+};
+
+window.cerrarSesion = async function() {
+  await signOut(auth);
+};
+
+window.eliminarCompromiso = async function(id) {
+  if (!confirm('¿Seguro que deseas eliminar este compromiso? Esta acción no se puede deshacer.')) return;
+  try {
+    await deleteDoc(doc(db, "compromisos", id));
+    await cargarDatos();
+  } catch (e) {
+    alert('❌ Error al eliminar: ' + e.message);
+  }
+};
+
+async function verificarRolUsuario(uid) {
+  try {
+    const snap = await getDoc(doc(db, "usuarios", uid));
+    if (snap.exists()) return snap.data().rol || 'viewer';
+    return 'viewer';
+  } catch (e) {
+    console.error('Error obteniendo rol:', e);
+    return 'viewer';
+  }
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    document.getElementById('loginOverlay').classList.add('hidden');
+
+    usuarioRol = await verificarRolUsuario(user.uid);
+
+    document.getElementById('userEmailDisplay').textContent = user.email;
+    document.getElementById('userRolDisplay').textContent =
+      usuarioRol === 'admin' ? '👑 Administrador' :
+      usuarioRol === 'editor' ? '✏️ Editor' : '👁️ Solo lectura';
+    document.getElementById('adminLink').style.display = usuarioRol === 'admin' ? 'inline-block' : 'none';
+    document.getElementById('userBadge').style.display = 'flex';
+
+    await cargarDatos();
+  } else {
+    document.getElementById('loadingOverlay').style.display = 'none';
+    document.getElementById('loginOverlay').classList.remove('hidden');
+    document.getElementById('userBadge').style.display = 'none';
+    usuarioRol = null;
+  }
+});
+
+</script>
+
+</body>
+</html>

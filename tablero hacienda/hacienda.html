@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tablero de Recaudo - Alcaldía de Guatapé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #1e2736;
+            --bg-darker: #141921;
+            --bg-card: #252d3d;
+            --verde-guatape: #2d5016;
+            --verde-claro: #4a7c2c;
+            --dorado: #d4af37;
+            --azul: #3498db;
+            --rojo: #e74c3c;
+            --texto: #ffffff;
+            --texto-secondary: #a0aec0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-darker);
+            color: var(--texto);
+            min-height: 100vh;
+        }
+
+        /* Header Compacto */
+        .header {
+            background: linear-gradient(135deg, var(--verde-guatape), var(--verde-claro));
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.4rem;
+            color: var(--verde-guatape);
+        }
+
+        .header-title h1 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.1rem;
+        }
+
+        .header-title p {
+            font-size: 0.7rem;
+            opacity: 0.85;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 0.8rem;
+        }
+
+        .header-btn {
+            padding: 0.6rem 1.2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 6px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .header-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .header-btn.active {
+            background: var(--dorado);
+            border-color: var(--dorado);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        /* Container */
+        .container {
+            padding: 1.5rem;
+            max-width: 1920px;
+            margin: 0 auto;
+        }
+
+        /* Slicer Mejorado */
+        .slicer-section {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .slicer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .slicer-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--texto);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .slicer-controls {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .mode-toggle {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--bg-darker);
+            padding: 0.3rem;
+            border-radius: 8px;
+        }
+
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            border-radius: 6px;
+            color: var(--texto-secondary);
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover {
+            background: rgba(74, 124, 44, 0.2);
+            color: var(--verde-claro);
+        }
+
+        .mode-btn.active {
+            background: var(--verde-claro);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 124, 44, 0.4);
+        }
+
+        .clear-filters-btn {
+            padding: 0.5rem 1rem;
+            background: var(--rojo);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .clear-filters-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .slicer-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1.5rem;
+        }
+
+        /* Filtro de Años */
+        .year-filter {
+            background: var(--bg-darker);
+            padding: 1.2rem;
+            border-radius: 10px;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--texto-secondary);
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+            letter-spacing: 1px;
+        }
+
+        .filter-hint {
+            font-size: 0.7rem;
+            color: var(--dorado);
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .years-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.7rem;
+        }
+
+        .year-btn {
+            padding: 0.8rem;
+            background: var(--bg-card);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--texto);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+        }
+
+        .year-btn:hover {
+            background: rgba(74, 124, 44, 0.2);
+            border-color: var(--verde-claro);
+            transform: translateY(-2px);
+        }
+
+        .year-btn.selected {
+            background: var(--verde-claro);
+            border-color: var(--verde-claro);
+            color: white;
+            box-shadow: 0 4px 15px rgba(74, 124, 44, 0.4);
+        }
+
+        .year-btn.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 0.3rem;
+            right: 0.5rem;
+            font-size: 0.8rem;
+            font-weight: 900;
+        }
+
+        /* Filtro de Meses */
+        .month-filter {
+            background: var(--bg-darker);
+            padding: 1.2rem;
+            border-radius: 10px;
+        }
+
+        .months-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.7rem;
+        }
+
+        .month-btn {
+            padding: 0.8rem 0.4rem;
+            background: var(--bg-card);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--texto);
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .month-btn:hover {
+            background: rgba(52, 152, 219, 0.2);
+            border-color: var(--azul);
+            transform: translateY(-2px);
+        }
+
+        .month-btn.selected {
+            background: var(--azul);
+            border-color: var(--azul);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+            position: relative;
+        }
+
+        .month-btn.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 0.3rem;
+            right: 0.3rem;
+            font-size: 0.7rem;
+            font-weight: 900;
+        }
+
+        .month-btn.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* KPIs */
+        .kpis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            padding: 1.2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            border-left: 4px solid var(--verde-claro);
+            transition: all 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+
+        .kpi-card:nth-child(2) { border-left-color: var(--dorado); }
+        .kpi-card:nth-child(3) { border-left-color: var(--azul); }
+        .kpi-card:nth-child(4) { border-left-color: #e67e22; }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            color: var(--texto-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.6rem;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--texto);
+            margin-bottom: 0.6rem;
+        }
+
+        .kpi-change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+        }
+
+        .kpi-change.positive {
+            background: rgba(74, 124, 44, 0.2);
+            color: var(--verde-claro);
+        }
+
+        .kpi-change.negative {
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--rojo);
+        }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            padding: 1.2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .chart-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--texto);
+        }
+
+        .chart-subtitle {
+            font-size: 0.75rem;
+            color: var(--texto-secondary);
+            margin-top: 0.2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 350px;
+        }
+
+        .chart-container-large {
+            height: 450px;
+        }
+
+        .charts-bottom {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .slicer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 0.8rem;
+                padding: 0.5rem 1rem;
+            }
+
+            .slicer-controls {
+                flex-direction: column;
+            }
+
+            .years-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .months-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .kpis-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-bottom {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body>
+
+<!-- NAV TABLEROS FLOTANTE -->
+<style>
+.nav-tableros{position:fixed;bottom:30px;right:30px;z-index:9999;}
+.nav-tableros-btn{width:56px;height:56px;border-radius:50%;background:#0D47A1;color:white;border:3px solid white;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.35);transition:transform 0.2s;}
+.nav-tableros-btn:hover{transform:scale(1.12);}
+.nav-tableros-menu{display:none;position:absolute;bottom:68px;right:0;background:white;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,0.22);min-width:230px;border:3px solid #0D47A1;overflow:hidden;}
+.nav-tableros-menu.show{display:block;}
+.nav-tableros-menu-title{background:#0D47A1;color:white;padding:10px 18px;font-weight:700;font-size:13px;letter-spacing:0.5px;}
+.nav-tableros-menu a{display:flex;align-items:center;gap:10px;padding:11px 18px;text-decoration:none;font-weight:600;font-size:14px;color:#0D47A1;border-bottom:1px solid #f0f0f0;transition:background 0.15s;}
+.nav-tableros-menu a:last-child{border-bottom:none;}
+.nav-tableros-menu a:hover{background:#eff6ff;}
+.nav-tableros-menu a.nav-current{background:#dbeafe;font-weight:800;}
+</style>
+<div class="nav-tableros" id="navTableroPrincipal">
+  <button class="nav-tableros-btn" onclick="document.getElementById('navTableroPrincipal').querySelector('.nav-tableros-menu').classList.toggle('show')" title="Navegar entre tableros">🧭</button>
+  <div class="nav-tableros-menu">
+    <div class="nav-tableros-menu-title">📍 Navegar entre tableros</div>
+    <a href="../index.html">🏠 &nbsp;Inicio</a>
+    <a href="../plan%20de%20desarrollo/plan_de_desarrollo.html">📊 &nbsp;Plan de Desarrollo</a>
+    <a href="../tablero%20hacienda/hacienda.html" class="nav-current">💰 &nbsp;Tablero Recaudo</a>
+    <a href="../tablero%20compromisos/dashboard-guatape.html">📋 &nbsp;Tablero Compromisos</a>
+  </div>
+</div>
+<script>
+document.addEventListener('click',function(e){var n=document.getElementById('navTableroPrincipal');if(n&&!n.contains(e.target)){var m=n.querySelector('.nav-tableros-menu');if(m)m.classList.remove('show');}});
+</script>
+
+    <!-- BARRA DE NAVEGACIÓN ENTRE TABLEROS -->
+    <div style="background:#0D47A1;padding:8px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-bottom:3px solid #1565C0;">
+        <span style="color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;letter-spacing:1px;margin-right:4px;">📍 TABLEROS:</span>
+        <a href="../index.html" style="color:white;text-decoration:none;background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">🏠 Inicio</a>
+        <a href="../plan%20de%20desarrollo/plan_de_desarrollo.html" style="color:white;text-decoration:none;background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">📊 Plan de Desarrollo</a>
+        <span style="color:white;background:rgba(255,255,255,0.3);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:800;border:2px solid rgba(255,255,255,0.6);">💰 Recaudo ✓</span>
+        <a href="../tablero%20compromisos/dashboard-guatape.html" style="color:white;text-decoration:none;background:rgba(255,255,255,0.15);border-radius:20px;padding:5px 14px;font-size:13px;font-weight:600;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">📋 Compromisos</a>
+    </div>
+
+    <div class="header">
+        <div class="header-left">
+            <div class="logo">G</div>
+            <div class="header-title">
+                <h1>TABLERO DE RECAUDO</h1>
+                <p>Secretaría de Hacienda • Elabora: Julián Vélez</p>
+            </div>
+        </div>
+        <div class="header-buttons">
+            <button class="header-btn active" id="btn-ica">ICA</button>
+            <button class="header-btn active" id="btn-predial">PREDIAL</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Segmentador -->
+        <div class="slicer-section">
+            <div class="slicer-header">
+                <div class="slicer-title">
+                    🎯 SEGMENTADOR DE DATOS
+                </div>
+                <div class="slicer-controls">
+                    <div class="mode-toggle">
+                        <button class="mode-btn active" id="mode-single" onclick="cambiarModo('single')">
+                            🔘 Selección Simple
+                        </button>
+                        <button class="mode-btn" id="mode-multiple" onclick="cambiarModo('multiple')">
+                            ☑️ Comparar Años
+                        </button>
+                    </div>
+                    <button class="clear-filters-btn" onclick="limpiarFiltros()">
+                        🔄 Limpiar Filtros
+                    </button>
+                </div>
+            </div>
+            <div class="slicer-grid">
+                <!-- Filtro de Años -->
+                <div class="year-filter">
+                    <div class="filter-label">📅 Seleccionar Año(s)</div>
+                    <div class="filter-hint" id="year-hint">Modo: Selección Simple</div>
+                    <div class="years-grid" id="years-container">
+                        <!-- Se llenan dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Filtro de Meses -->
+                <div class="month-filter">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem;">
+                        <div class="filter-label" style="margin-bottom: 0;">📆 Seleccionar Mes(es)</div>
+                        <div class="mode-toggle" style="transform: scale(0.85);">
+                            <button class="mode-btn active" id="mode-mes-single" onclick="cambiarModoMeses('single')">
+                                🔘 Simple
+                            </button>
+                            <button class="mode-btn" id="mode-mes-multiple" onclick="cambiarModoMeses('multiple')">
+                                ☑️ Comparar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="filter-hint" id="month-hint" style="margin-bottom: 0.8rem; color: var(--dorado); font-weight: 600;">
+                        💡 Simple: 1 mes. Comparar: múltiples meses/trimestres.
+                    </div>
+                    <div class="months-grid" id="months-container">
+                        <!-- Se llenan dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpis-grid">
+            <div class="kpi-card">
+                <div class="kpi-label">💰 Recaudo Total</div>
+                <div class="kpi-value" id="kpi-total">$0</div>
+                <span class="kpi-change positive" id="kpi-total-change">↑ 0%</span>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">🏘️ Impuesto Predial</div>
+                <div class="kpi-value" id="kpi-predial">$0</div>
+                <span id="kpi-predial-pct">0%</span>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">🏢 Impuesto ICA</div>
+                <div class="kpi-value" id="kpi-ica">$0</div>
+                <span id="kpi-ica-pct">0%</span>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-label">📊 Período Seleccionado</div>
+                <div class="kpi-value" id="kpi-periodo" style="font-size: 1.3rem;">Todos</div>
+                <span id="kpi-registros">0 registros</span>
+            </div>
+        </div>
+
+        <!-- Charts principales -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">📈 Evolución Histórica del Recaudo</div>
+                        <div class="chart-subtitle">Comparativo Predial vs ICA</div>
+                    </div>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="chartEvolucion"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">📊 Recaudo por Año</div>
+                        <div class="chart-subtitle">Total anual acumulado</div>
+                    </div>
+                </div>
+                <div class="chart-container-large">
+                    <canvas id="chartAnual"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts adicionales -->
+        <div class="charts-bottom">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">📊 Comparativo Detallado</div>
+                        <div class="chart-subtitle">Con etiquetas de datos</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartComparativo"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">💹 Crecimiento Interanual</div>
+                        <div class="chart-subtitle">Variación % año vs año anterior</div>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="chartCrecimiento"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ============================================
+// 📊 TABLERO DE RECAUDO - HACIENDA GUATAPÉ
+// Versión: OPTIMIZADA CON GRÁFICAS FUNCIONALES
+// ============================================
+
+let datosHacienda = [];
+
+// ============================================
+// 🔥 CONFIGURACIÓN FIREBASE
+// ============================================
+
+let firebaseEnabled = false;
+let db = null;
+
+try {
+    const firebaseConfig = {
+        apiKey: "AIzaSyCtcqOSIQ7CBgXOCM_tq6LLKjDeLLbPhiQ",
+        authDomain: "recaudo-bc823.firebaseapp.com",
+        projectId: "recaudo-bc823",
+        storageBucket: "recaudo-bc823.firebasestorage.app",
+        messagingSenderId: "318995832964",
+        appId: "1:318995832964:web:bda23a7037ce663fe2e2d1"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    firebaseEnabled = true;
+    console.log('🔥 Firebase inicializado correctamente');
+    
+    db.enablePersistence()
+        .then(() => console.log('💾 Persistencia offline habilitada'))
+        .catch((err) => {
+            if (err.code == 'failed-precondition') {
+                console.warn('⚠️ Múltiples pestañas abiertas');
+            } else if (err.code == 'unimplemented') {
+                console.warn('⚠️ Navegador no soporta persistencia');
+            }
+        });
+} catch (error) {
+    console.error('❌ Error inicializando Firebase:', error);
+    alert('Error crítico: No se pudo conectar a Firebase.');
+}
+
+// ============================================
+// 🔥 CARGAR DATOS DESDE FIREBASE
+// ============================================
+
+async function cargarDatosFirebase() {
+    if (!firebaseEnabled) {
+        mostrarNotificacion('❌ Firebase no está configurado', 'error');
+        return false;
+    }
+
+    try {
+        console.log('📥 Descargando datos desde Firebase...');
+        
+        const snapshot = await db.collection('Recaudo').get();
+        
+        if (snapshot.empty) {
+            console.warn('⚠️ La colección "Recaudo" está vacía');
+            mostrarNotificacion('⚠️ No hay datos en Firebase.', 'warning');
+            return false;
+        }
+
+        datosHacienda.length = 0;
+
+        // ✅ Mapeo de meses en INGLÉS (como vienen de Firebase) y español
+        const trimestresMap = {
+            // Inglés (como están en Firebase)
+            'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12,
+            // Español (por si acaso)
+            'Ene': 1, 'Abr': 4, 'Ago': 8, 'Dic': 12
+        };
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            
+            // ✅ CONVERSIÓN CRÍTICA: String → Number
+            const año = parseInt(data.AÑO) || 2018;
+            const valor = parseFloat(String(data.VALOR).replace(/[^0-9.-]/g, '')) || 0;
+            
+            let mes = 12;
+            let trimestreISO = '';
+            
+            if (data.TRIMESTRE) {
+                const mesParte = data.TRIMESTRE.split('-')[0];
+                mes = trimestresMap[mesParte] || 12;
+                
+                // ⚠️ Log si no se reconoce el mes
+                if (!trimestresMap[mesParte]) {
+                    console.warn(`⚠️ Mes no reconocido: "${mesParte}" en TRIMESTRE: "${data.TRIMESTRE}"`);
+                }
+                
+                const añoParte = data.TRIMESTRE.split('-')[1];
+                const añoCompleto = añoParte.length === 2 ? `20${añoParte}` : año;
+                trimestreISO = `${añoCompleto}-${mes.toString().padStart(2, '0')}-01`;
+            }
+            
+            datosHacienda.push({
+                AÑO: año,
+                RENTA: data.RENTA || 'ICA',
+                TRIMESTRE: trimestreISO,
+                VALOR: valor,
+                MES: mes,
+                PREDICCION: false
+            });
+        });
+
+        datosHacienda.sort((a, b) => {
+            if (a.AÑO !== b.AÑO) return a.AÑO - b.AÑO;
+            return a.MES - b.MES;
+        });
+
+        console.log(`✅ Cargados ${datosHacienda.length} registros desde Firebase`);
+        
+        // ✅ RESUMEN POR AÑO Y MES para debug
+        const resumen = {};
+        datosHacienda.forEach(d => {
+            if (!resumen[d.AÑO]) resumen[d.AÑO] = {};
+            if (!resumen[d.AÑO][d.MES]) resumen[d.AÑO][d.MES] = 0;
+            resumen[d.AÑO][d.MES]++;
+        });
+        
+        console.log('📊 Resumen de datos por año y mes:');
+        Object.keys(resumen).sort().forEach(año => {
+            const mesesDelAño = Object.keys(resumen[año]).sort((a, b) => a - b);
+            console.log(`   ${año}: Meses disponibles: ${mesesDelAño.join(', ')} (${mesesDelAño.length} períodos)`);
+        });
+        
+        console.log('📊 Primeros 3 registros:', datosHacienda.slice(0, 3));
+        
+        mostrarNotificacion(`✅ ${datosHacienda.length} registros sincronizados`, 'success');
+        
+        return true;
+
+    } catch (error) {
+        console.error('❌ Error cargando datos:', error);
+        mostrarNotificacion('❌ Error al cargar datos: ' + error.message, 'error');
+        return false;
+    }
+}
+
+// ============================================
+// 📝 SISTEMA DE NOTIFICACIONES
+// ============================================
+
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    const notif = document.createElement('div');
+    notif.className = `notificacion notificacion-${tipo}`;
+    
+    const iconos = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    
+    notif.innerHTML = `
+        <span style="font-size: 1.2rem; margin-right: 0.5rem;">${iconos[tipo]}</span>
+        <span>${mensaje}</span>
+    `;
+    
+    if (!document.getElementById('notif-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notif-styles';
+        style.textContent = `
+            .notificacion {
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+                max-width: 400px;
+            }
+            .notificacion-success { border-left: 4px solid #4a7c2c; color: #4a7c2c; }
+            .notificacion-error { border-left: 4px solid #ff6b6b; color: #ff6b6b; }
+            .notificacion-warning { border-left: 4px solid #ff9800; color: #ff9800; }
+            .notificacion-info { border-left: 4px solid #03a9f4; color: #03a9f4; }
+            @keyframes slideInRight {
+                from { transform: translateX(400px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(notif);
+    
+    setTimeout(() => {
+        notif.style.animation = 'slideInRight 0.3s ease reverse';
+        setTimeout(() => notif.remove(), 300);
+    }, 4000);
+}
+
+// ============================================
+// 📊 LÓGICA DE FILTROS
+// ============================================
+
+let filtros = { 
+    anios: [],
+    meses: [],
+    modo: 'single',
+    modoMeses: 'single',
+    mostrarICA: true, 
+    mostrarPredial: true 
+};
+
+let charts = {};
+const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+function formatCurrency(value) {
+    return new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: 'COP',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    }).format(value);
+}
+
+function formatShort(value) {
+    if (value >= 1000000000) return `$${(value / 1000000000).toFixed(1)}MM`;
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    return formatCurrency(value);
+}
+
+function cambiarModo(modo) {
+    filtros.modo = modo;
+    filtros.anios = [];
+    filtros.meses = [];
+    
+    document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('selected'));
+    
+    document.getElementById('mode-single').classList.toggle('active', modo === 'single');
+    document.getElementById('mode-multiple').classList.toggle('active', modo === 'multiple');
+    
+    document.getElementById('year-hint').textContent = modo === 'single' 
+        ? 'Modo: Selección Simple' 
+        : 'Modo: Comparar Años';
+    
+    actualizarTodo();
+}
+
+function cambiarModoMeses(modo) {
+    filtros.modoMeses = modo;
+    filtros.meses = [];
+    
+    document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('selected'));
+    
+    document.getElementById('mode-mes-single').classList.toggle('active', modo === 'single');
+    document.getElementById('mode-mes-multiple').classList.toggle('active', modo === 'multiple');
+    
+    actualizarTodo();
+}
+
+function seleccionarAnio(anio) {
+    if (filtros.modo === 'single') {
+        filtros.anios = [anio];
+        document.querySelectorAll('.year-btn').forEach(btn => {
+            btn.classList.toggle('selected', parseInt(btn.dataset.anio) === anio);
+        });
+    } else {
+        const index = filtros.anios.indexOf(anio);
+        if (index > -1) {
+            filtros.anios.splice(index, 1);
+        } else {
+            filtros.anios.push(anio);
+        }
+        document.querySelector(`[data-anio="${anio}"]`).classList.toggle('selected');
+    }
+    
+    filtros.anios.sort();
+    crearMeses();
+    actualizarTodo();
+}
+
+function seleccionarMes(mes) {
+    if (filtros.modoMeses === 'single') {
+        filtros.meses = [mes];
+        document.querySelectorAll('.month-btn').forEach(btn => {
+            btn.classList.toggle('selected', parseInt(btn.dataset.mes) === mes);
+        });
+    } else {
+        const index = filtros.meses.indexOf(mes);
+        if (index > -1) {
+            filtros.meses.splice(index, 1);
+        } else {
+            filtros.meses.push(mes);
+        }
+        document.querySelector(`[data-mes="${mes}"]`).classList.toggle('selected');
+    }
+    
+    filtros.meses.sort((a, b) => a - b);
+    actualizarTodo();
+}
+
+function limpiarFiltros() {
+    filtros.anios = [];
+    filtros.meses = [];
+    filtros.modo = 'single';
+    filtros.modoMeses = 'single';
+    filtros.mostrarICA = true;
+    filtros.mostrarPredial = true;
+    
+    document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('selected'));
+    document.querySelectorAll('.month-btn').forEach(btn => btn.classList.remove('selected'));
+    
+    document.getElementById('mode-single').classList.add('active');
+    document.getElementById('mode-multiple').classList.remove('active');
+    document.getElementById('mode-mes-single').classList.add('active');
+    document.getElementById('mode-mes-multiple').classList.remove('active');
+    document.getElementById('btn-ica').classList.add('active');
+    document.getElementById('btn-predial').classList.add('active');
+    
+    document.getElementById('year-hint').textContent = 'Modo: Selección Simple';
+    
+    actualizarTodo();
+}
+
+function crearAnios() {
+    const aniosUnicos = [...new Set(datosHacienda.map(d => d.AÑO))].sort();
+    const container = document.getElementById('years-container');
+    
+    container.innerHTML = aniosUnicos.map(anio => `
+        <button class="year-btn" data-anio="${anio}" onclick="seleccionarAnio(${anio})">
+            ${anio}
+        </button>
+    `).join('');
+}
+
+function crearMeses() {
+    let mesesDisponibles = [];
+    let mostrarTodosMeses = false;
+    
+    // ✅ Determinar si mostrar todos los meses o solo trimestres
+    if (filtros.anios.length > 0) {
+        const añoMaximo = Math.max(...filtros.anios);
+        mostrarTodosMeses = añoMaximo >= 2024;
+        
+        const datosFiltrados = datosHacienda.filter(d => filtros.anios.includes(d.AÑO));
+        mesesDisponibles = [...new Set(datosFiltrados.map(d => d.MES))].sort((a, b) => a - b);
+    } else {
+        // Si no hay años seleccionados, mostrar todos los meses disponibles
+        mesesDisponibles = [...new Set(datosHacienda.map(d => d.MES))].sort((a, b) => a - b);
+        mostrarTodosMeses = mesesDisponibles.length > 4;
+    }
+    
+    const container = document.getElementById('months-container');
+    
+    // ✅ Mostrar trimestres (Q1-Q4) o todos los meses (Ene-Dic)
+    const mesesAMostrar = mostrarTodosMeses 
+        ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] // Todos los meses
+        : [3, 6, 9, 12]; // Solo trimestres
+    
+    container.innerHTML = mesesAMostrar.map(mes => {
+        const disponible = mesesDisponibles.includes(mes);
+        const mesNombre = meses[mes - 1];
+        
+        // Etiqueta de trimestre solo si estamos en modo trimestral
+        const trimestre = !mostrarTodosMeses 
+            ? `<br><small style="opacity: 0.7;">${mes === 3 ? 'Q1' : mes === 6 ? 'Q2' : mes === 9 ? 'Q3' : 'Q4'}</small>`
+            : '';
+        
+        return `
+            <button class="month-btn ${!disponible ? 'disabled' : ''}" 
+                    data-mes="${mes}" 
+                    onclick="seleccionarMes(${mes})"
+                    ${!disponible ? 'disabled' : ''}>
+                ${mesNombre}${trimestre}
+            </button>
+        `;
+    }).join('');
+    
+    // Actualizar el grid de meses según cantidad
+    if (mostrarTodosMeses) {
+        container.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    } else {
+        container.style.gridTemplateColumns = 'repeat(4, 1fr)';
+    }
+}
+
+function obtenerDatosFiltrados() {
+    return datosHacienda.filter(d => {
+        const cumpleAnio = filtros.anios.length === 0 || filtros.anios.includes(d.AÑO);
+        const cumpleMes = filtros.meses.length === 0 || filtros.meses.includes(d.MES);
+        const cumpleRenta = (d.RENTA === 'ICA' && filtros.mostrarICA) || 
+                           (d.RENTA === 'PREDIAL' && filtros.mostrarPredial);
+        return cumpleAnio && cumpleMes && cumpleRenta && !d.PREDICCION;
+    });
+}
+
+// ============================================
+// 📊 CÁLCULO DE KPIs
+// ============================================
+
+function calcularKPIs() {
+    const datosFiltrados = obtenerDatosFiltrados();
+    const total = datosFiltrados.reduce((sum, d) => sum + d.VALOR, 0);
+    const predial = datosFiltrados.filter(d => d.RENTA === 'PREDIAL').reduce((sum, d) => sum + d.VALOR, 0);
+    const ica = datosFiltrados.filter(d => d.RENTA === 'ICA').reduce((sum, d) => sum + d.VALOR, 0);
+    
+    document.getElementById('kpi-total').textContent = formatCurrency(total);
+    document.getElementById('kpi-predial').textContent = formatCurrency(predial);
+    document.getElementById('kpi-ica').textContent = formatCurrency(ica);
+    
+    const pctPredial = total > 0 ? (predial / total * 100).toFixed(1) : 0;
+    const pctICA = total > 0 ? (ica / total * 100).toFixed(1) : 0;
+    
+    document.getElementById('kpi-predial-pct').textContent = `${pctPredial}%`;
+    document.getElementById('kpi-ica-pct').textContent = `${pctICA}%`;
+    
+    const aniosTexto = filtros.anios.length > 0 ? filtros.anios.join(', ') : 'Todos';
+    
+    document.getElementById('kpi-periodo').textContent = `${aniosTexto}`;
+    document.getElementById('kpi-registros').textContent = `${datosFiltrados.length} registros`;
+}
+
+// ============================================
+// 📊 CREACIÓN DE GRÁFICAS
+// ============================================
+
+function crearGraficos() {
+    console.log('🎨 Iniciando creación de gráficos...');
+    
+    const ctx1 = document.getElementById('chartEvolucion');
+    const ctx2 = document.getElementById('chartAnual');
+    const ctx3 = document.getElementById('chartComparativo');
+    const ctx4 = document.getElementById('chartCrecimiento');
+    
+    if (!ctx1 || !ctx2 || !ctx3 || !ctx4) {
+        console.error('❌ No se encontraron los canvas');
+        console.log('ctx1:', ctx1, 'ctx2:', ctx2, 'ctx3:', ctx3, 'ctx4:', ctx4);
+        return;
+    }
+    
+    console.log('✅ Canvas encontrados correctamente');
+    
+    // Configuración común para todas las gráficas
+    Chart.defaults.color = '#a0aec0';
+    Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    
+    // 1️⃣ GRÁFICA DE EVOLUCIÓN HISTÓRICA
+    charts.evolucion = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'PREDIAL',
+                    data: [],
+                    borderColor: '#d4af37',
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'ICA',
+                    data: [],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#ffffff',
+                        font: { size: 12, weight: 'bold' },
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatShort(value);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.05)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // 2️⃣ GRÁFICA ANUAL (BARRAS)
+    charts.anual = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Recaudo Total',
+                data: [],
+                backgroundColor: function(context) {
+                    // ✅ Validar que existan datos antes de calcular
+                    if (!context.parsed || context.parsed.y === undefined || !context.dataset.data || context.dataset.data.length === 0) {
+                        return 'rgba(74, 124, 44, 0.7)';
+                    }
+                    const value = context.parsed.y;
+                    const max = Math.max(...context.dataset.data);
+                    const intensity = max > 0 ? value / max : 0.5;
+                    return `rgba(74, 124, 44, ${0.4 + intensity * 0.6})`;
+                },
+                borderColor: '#4a7c2c',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Total: ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatShort(value);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+    
+    // 3️⃣ GRÁFICA COMPARATIVA CON ETIQUETAS
+    charts.comparativo = new Chart(ctx3, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'PREDIAL',
+                    data: [],
+                    backgroundColor: 'rgba(212, 175, 55, 0.7)',
+                    borderColor: '#d4af37',
+                    borderWidth: 2
+                },
+                {
+                    label: 'ICA',
+                    data: [],
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: '#3498db',
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        color: '#ffffff',
+                        font: { size: 11, weight: 'bold' }
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                },
+                datalabels: {
+                    display: true,
+                    color: '#ffffff',
+                    font: {
+                        weight: 'bold',
+                        size: 10
+                    },
+                    formatter: function(value) {
+                        if (value === 0) return '';
+                        return formatShort(value);
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatShort(value);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    
+    // 4️⃣ GRÁFICA DE CRECIMIENTO INTERANUAL
+    charts.crecimiento = new Chart(ctx4, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Crecimiento %',
+                data: [],
+                backgroundColor: function(context) {
+                    // ✅ Validar que existan datos antes de calcular
+                    if (!context.parsed || context.parsed.y === undefined) {
+                        return 'rgba(74, 124, 44, 0.7)';
+                    }
+                    const value = context.parsed.y;
+                    return value >= 0 ? 'rgba(74, 124, 44, 0.7)' : 'rgba(231, 76, 60, 0.7)';
+                },
+                borderColor: function(context) {
+                    // ✅ Validar que existan datos antes de calcular
+                    if (!context.parsed || context.parsed.y === undefined) {
+                        return '#4a7c2c';
+                    }
+                    const value = context.parsed.y;
+                    return value >= 0 ? '#4a7c2c' : '#e74c3c';
+                },
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return 'Variación: ' + context.parsed.y.toFixed(1) + '%';
+                        }
+                    }
+                },
+                datalabels: {
+                    display: true,
+                    color: '#ffffff',
+                    font: {
+                        weight: 'bold',
+                        size: 11
+                    },
+                    formatter: function(value) {
+                        return value.toFixed(1) + '%';
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    grid: {
+                        color: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+    
+    console.log('✅ Las 4 gráficas fueron creadas exitosamente');
+    console.log('📊 Gráficos disponibles:', Object.keys(charts));
+}
+
+// ============================================
+// 🔄 ACTUALIZAR GRÁFICAS CON DATOS FILTRADOS
+// ============================================
+
+function actualizarGraficos() {
+    // ✅ Validar que los gráficos existan antes de actualizarlos
+    if (!charts.evolucion || !charts.anual || !charts.comparativo || !charts.crecimiento) {
+        console.warn('⚠️ Los gráficos aún no están creados');
+        return;
+    }
+    
+    const datosFiltrados = obtenerDatosFiltrados();
+    
+    if (datosFiltrados.length === 0) {
+        console.warn('⚠️ No hay datos para mostrar');
+        return;
+    }
+    
+    // 1️⃣ EVOLUCIÓN HISTÓRICA (Líneas por mes/trimestre)
+    const evolucionPorPeriodo = {};
+    datosFiltrados.forEach(d => {
+        const key = `${d.AÑO}-${d.MES}`;
+        if (!evolucionPorPeriodo[key]) {
+            evolucionPorPeriodo[key] = { PREDIAL: 0, ICA: 0, año: d.AÑO, mes: d.MES };
+        }
+        evolucionPorPeriodo[key][d.RENTA] += d.VALOR;
+    });
+    
+    const periodosOrdenados = Object.keys(evolucionPorPeriodo).sort();
+    const labelsEvolucion = periodosOrdenados.map(k => {
+        const datos = evolucionPorPeriodo[k];
+        return `${meses[datos.mes - 1]} ${datos.año}`;
+    });
+    const datosPredial = periodosOrdenados.map(k => evolucionPorPeriodo[k].PREDIAL);
+    const datosICA = periodosOrdenados.map(k => evolucionPorPeriodo[k].ICA);
+    
+    charts.evolucion.data.labels = labelsEvolucion;
+    charts.evolucion.data.datasets[0].data = datosPredial;
+    charts.evolucion.data.datasets[1].data = datosICA;
+    charts.evolucion.update();
+    
+    // 2️⃣ RECAUDO ANUAL (Barras por año)
+    const recaudoPorAnio = {};
+    datosFiltrados.forEach(d => {
+        if (!recaudoPorAnio[d.AÑO]) recaudoPorAnio[d.AÑO] = 0;
+        recaudoPorAnio[d.AÑO] += d.VALOR;
+    });
+    
+    const aniosOrdenados = Object.keys(recaudoPorAnio).sort();
+    const valoresAnuales = aniosOrdenados.map(a => recaudoPorAnio[a]);
+    
+    charts.anual.data.labels = aniosOrdenados;
+    charts.anual.data.datasets[0].data = valoresAnuales;
+    charts.anual.update();
+    
+    // 3️⃣ COMPARATIVO DETALLADO (Barras agrupadas por año)
+    const comparativoPorAnio = {};
+    datosFiltrados.forEach(d => {
+        if (!comparativoPorAnio[d.AÑO]) {
+            comparativoPorAnio[d.AÑO] = { PREDIAL: 0, ICA: 0 };
+        }
+        comparativoPorAnio[d.AÑO][d.RENTA] += d.VALOR;
+    });
+    
+    const aniosComparativo = Object.keys(comparativoPorAnio).sort();
+    const predialComparativo = aniosComparativo.map(a => comparativoPorAnio[a].PREDIAL);
+    const icaComparativo = aniosComparativo.map(a => comparativoPorAnio[a].ICA);
+    
+    charts.comparativo.data.labels = aniosComparativo;
+    charts.comparativo.data.datasets[0].data = predialComparativo;
+    charts.comparativo.data.datasets[1].data = icaComparativo;
+    charts.comparativo.update();
+    
+    // 4️⃣ CRECIMIENTO INTERANUAL
+    const crecimientoData = [];
+    const aniosCrecimiento = [];
+    
+    for (let i = 1; i < aniosOrdenados.length; i++) {
+        const añoActual = parseInt(aniosOrdenados[i]);
+        const añoAnterior = parseInt(aniosOrdenados[i - 1]);
+        
+        const valorActual = recaudoPorAnio[añoActual];
+        const valorAnterior = recaudoPorAnio[añoAnterior];
+        
+        const crecimiento = ((valorActual - valorAnterior) / valorAnterior) * 100;
+        
+        aniosCrecimiento.push(`${añoActual} vs ${añoAnterior}`);
+        crecimientoData.push(crecimiento);
+    }
+    
+    charts.crecimiento.data.labels = aniosCrecimiento;
+    charts.crecimiento.data.datasets[0].data = crecimientoData;
+    charts.crecimiento.update();
+}
+
+function actualizarTodo() {
+    calcularKPIs();
+    actualizarGraficos();
+}
+
+// ============================================
+// 🚀 INICIALIZACIÓN AUTOMÁTICA
+// ============================================
+
+window.addEventListener('load', async () => {
+    console.log('🚀 Iniciando tablero optimizado...');
+    
+    if (!firebaseEnabled) {
+        alert('❌ ERROR: No se pudo conectar a Firebase.');
+        return;
+    }
+    
+    // PASO 1: Cargar datos desde Firebase
+    console.log('📥 PASO 1: Cargando datos...');
+    const cargado = await cargarDatosFirebase();
+    
+    if (cargado) {
+        console.log('✅ Datos cargados exitosamente');
+        
+        // PASO 2: Crear los segmentadores (años y meses)
+        console.log('🎯 PASO 2: Creando segmentadores...');
+        crearAnios();
+        crearMeses();
+        
+        // PASO 3: Crear las gráficas (IMPORTANTE: antes de actualizar)
+        console.log('📊 PASO 3: Creando gráficas...');
+        crearGraficos();
+        
+        // PASO 4: Calcular KPIs y actualizar gráficas
+        console.log('🔄 PASO 4: Actualizando datos...');
+        actualizarTodo();
+        
+        console.log('✅ ¡Tablero listo y funcionando!');
+    } else {
+        console.error('❌ No se pudieron cargar datos');
+        mostrarNotificacion('❌ Error al cargar datos.', 'error');
+    }
+});
+
+// Event listeners para botones de filtro
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('btn-ica').addEventListener('click', function() {
+        this.classList.toggle('active');
+        filtros.mostrarICA = this.classList.contains('active');
+        actualizarTodo();
+    });
+    
+    document.getElementById('btn-predial').addEventListener('click', function() {
+        this.classList.toggle('active');
+        filtros.mostrarPredial = this.classList.contains('active');
+        actualizarTodo();
+    });
+});
+
+console.log('✅ Tablero de Recaudo - Versión Optimizada Cargada');
+</script>
+
+<!-- LOGIN OVERLAY - TABLERO RECAUDO -->
+<style>
+#loginOverlayRecaudo {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #0D47A1 0%, #1565C0 50%, #0277BD 100%);
+  background-size: 400% 400%; animation: recaudoGrad 15s ease infinite;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10001; padding: 20px;
+}
+@keyframes recaudoGrad {
+  0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
+}
+#loginOverlayRecaudo.hidden { display: none; }
+.login-recaudo-card {
+  background: white; border-radius: 24px; padding: 2.5rem;
+  max-width: 420px; width: 100%; text-align: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,.5); border: 6px solid #0D47A1;
+}
+.login-recaudo-icon { font-size: 3.5rem; margin-bottom: 0.5rem; }
+.login-recaudo-title {
+  font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 800;
+  color: #0D47A1; margin-bottom: 0.2rem;
+}
+.login-recaudo-sub {
+  font-family: 'Montserrat', sans-serif; font-size: 0.95rem; color: #666;
+  margin-bottom: 1.8rem;
+}
+.login-recaudo-input {
+  width: 100%; padding: 0.9rem 1.2rem; border: 3px solid #ddd; border-radius: 12px;
+  font-family: 'Montserrat', sans-serif; font-size: 1rem; margin-bottom: 0.9rem;
+  transition: all 0.3s; box-sizing: border-box;
+}
+.login-recaudo-input:focus { outline: none; border-color: #0D47A1; box-shadow: 0 0 0 3px rgba(13,71,161,0.15); }
+.login-recaudo-btn {
+  width: 100%; padding: 0.9rem; background: #0D47A1; color: white; border: none;
+  border-radius: 14px; font-family: 'Montserrat', sans-serif; font-size: 1.1rem;
+  font-weight: 700; cursor: pointer; transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(13,71,161,0.4);
+}
+.login-recaudo-btn:hover { background: #1565C0; transform: translateY(-2px); }
+.login-recaudo-error {
+  background: #ffebee; color: #c62828; border: 2px solid #ef9a9a;
+  border-radius: 10px; padding: 0.8rem; margin-top: 1rem;
+  font-family: 'Montserrat', sans-serif; font-size: 0.9rem; display: none;
+}
+.login-recaudo-error.show { display: block; }
+.btn-logout-recaudo {
+  position: fixed; top: 14px; right: 100px; z-index: 10000;
+  background: rgba(255,255,255,0.2); color: white; border: 2px solid rgba(255,255,255,0.6);
+  border-radius: 20px; padding: 6px 16px; font-family: 'Montserrat', sans-serif;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
+  display: none;
+}
+.btn-logout-recaudo:hover { background: rgba(255,255,255,0.35); }
+</style>
+
+<div id="loginOverlayRecaudo">
+  <div class="login-recaudo-card">
+    <div class="login-recaudo-icon">💰</div>
+    <h2 class="login-recaudo-title">Tablero de Recaudo</h2>
+    <p class="login-recaudo-sub">Secretaría de Hacienda · Guatapé<br>Acceso restringido — ingrese sus credenciales</p>
+    <input type="email" id="recaudoEmail" class="login-recaudo-input" placeholder="📧 Correo electrónico">
+    <input type="password" id="recaudoPassword" class="login-recaudo-input" placeholder="🔒 Contraseña"
+      onkeydown="if(event.key==='Enter') loginRecaudo()">
+    <button class="login-recaudo-btn" onclick="loginRecaudo()">🚀 Ingresar</button>
+    <div class="login-recaudo-error" id="loginRecaudoError">❌ Correo o contraseña incorrectos</div>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:2px solid #eee;display:flex;justify-content:center;gap:10px;flex-wrap:wrap;">
+      <a href="../index.html" style="color:#0D47A1;text-decoration:none;font-size:0.82rem;font-weight:600;padding:5px 12px;border-radius:20px;background:#e3f2fd;transition:background 0.2s;" onmouseover="this.style.background='#bbdefb'" onmouseout="this.style.background='#e3f2fd'">🏠 Inicio</a>
+      <a href="../plan%20de%20desarrollo/plan_de_desarrollo.html" style="color:#0D47A1;text-decoration:none;font-size:0.82rem;font-weight:600;padding:5px 12px;border-radius:20px;background:#e3f2fd;transition:background 0.2s;" onmouseover="this.style.background='#bbdefb'" onmouseout="this.style.background='#e3f2fd'">📊 Plan de Desarrollo</a>
+      <a href="../tablero%20compromisos/dashboard-guatape.html" style="color:#0D47A1;text-decoration:none;font-size:0.82rem;font-weight:600;padding:5px 12px;border-radius:20px;background:#e3f2fd;transition:background 0.2s;" onmouseover="this.style.background='#bbdefb'" onmouseout="this.style.background='#e3f2fd'">📋 Compromisos</a>
+    </div>
+  </div>
+</div>
+
+<button class="btn-logout-recaudo" id="btnLogoutRecaudo" onclick="logoutRecaudo()">Salir 🚪</button>
+
+<script type="module">
+// ===== AUTH TABLERO RECAUDO — usa compromisos-22fa4 para control centralizado =====
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const compromisosCfg = {
+  apiKey: "AIzaSyBEYH9mlu_Jg41iQq2gAsdVlvlpggvoObQ",
+  authDomain: "compromisos-22fa4.firebaseapp.com",
+  projectId: "compromisos-22fa4"
+};
+
+// Instancia con nombre diferente para no colisionar con la app compat de recaudo-bc823
+const authApp = initializeApp(compromisosCfg, 'compromisos-auth');
+const auth    = getAuth(authApp);
+const authDb  = getFirestore(authApp);
+
+window.loginRecaudo = async function() {
+  const email  = document.getElementById('recaudoEmail').value.trim();
+  const pwd    = document.getElementById('recaudoPassword').value;
+  const errEl  = document.getElementById('loginRecaudoError');
+  errEl.classList.remove('show');
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+  } catch (e) {
+    errEl.textContent = '❌ Correo o contraseña incorrectos';
+    errEl.classList.add('show');
+  }
+};
+
+window.logoutRecaudo = async function() {
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, async (user) => {
+  const overlay   = document.getElementById('loginOverlayRecaudo');
+  const logoutBtn = document.getElementById('btnLogoutRecaudo');
+  const errEl     = document.getElementById('loginRecaudoError');
+
+  if (user) {
+    // Verificar permisos en Firestore de compromisos-22fa4
+    try {
+      const snap = await getDoc(doc(authDb, 'usuarios', user.uid));
+      const userData = snap.exists() ? snap.data() : null;
+      const rol      = userData?.rol || 'viewer';
+      const tableros = userData?.tableros || [];
+
+      // Admin tiene acceso a todo; otros necesitan 'recaudo' en su lista de tableros
+      if (rol === 'admin' || tableros.includes('recaudo')) {
+        overlay.classList.add('hidden');
+        logoutBtn.style.display = 'block';
+      } else {
+        // Sin permiso: mostrar mensaje y cerrar sesión
+        errEl.textContent = '🚫 No tienes permiso para acceder al Tablero de Recaudo. Contacta al administrador.';
+        errEl.classList.add('show');
+        logoutBtn.style.display = 'none';
+        await signOut(auth);
+      }
+    } catch (e) {
+      errEl.textContent = '❌ Error al verificar permisos. Intenta de nuevo.';
+      errEl.classList.add('show');
+      await signOut(auth);
+    }
+  } else {
+    overlay.classList.remove('hidden');
+    logoutBtn.style.display = 'none';
+  }
+});
+</script>
+
+</body>
+</html>
