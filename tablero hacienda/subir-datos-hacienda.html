@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargar Datos - Hacienda Guatapé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase v8 compat (mismo que hacienda.html) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- SheetJS para leer Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-dark: #1e2736;
+            --bg-darker: #141921;
+            --bg-card: #252d3d;
+            --verde-guatape: #2d5016;
+            --verde-claro: #4a7c2c;
+            --dorado: #d4af37;
+            --azul: #3498db;
+            --rojo: #e74c3c;
+            --verde-ok: #27ae60;
+            --texto: #ffffff;
+            --texto-secondary: #a0aec0;
+        }
+
+        body {
+            font-family: 'Montserrat', 'Segoe UI', sans-serif;
+            background: var(--bg-darker);
+            color: var(--texto);
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .header {
+            background: linear-gradient(135deg, var(--verde-guatape), var(--verde-claro));
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .header-left { display: flex; align-items: center; gap: 0.8rem; }
+        .logo {
+            width: 42px; height: 42px;
+            background: white; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; font-size: 1.3rem; color: var(--verde-guatape);
+        }
+        .header-title h1 { font-size: 1.1rem; font-weight: 700; }
+        .header-title p { font-size: 0.7rem; opacity: 0.85; }
+        .header-btn {
+            padding: 0.55rem 1.1rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 6px; color: white;
+            font-weight: 700; cursor: pointer;
+            transition: all 0.25s; font-size: 0.8rem;
+            text-transform: uppercase; text-decoration: none;
+        }
+        .header-btn:hover { background: rgba(255,255,255,0.35); }
+
+        /* ── STATUS FIREBASE ── */
+        .status-bar {
+            background: var(--bg-card);
+            padding: 0.6rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.8rem;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+        .status-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #e74c3c;
+            box-shadow: 0 0 8px #e74c3c;
+            flex-shrink: 0;
+        }
+        .status-dot.conectado { background: #27ae60; box-shadow: 0 0 8px #27ae60; }
+        #status-text { color: var(--texto-secondary); }
+
+        /* ── CONTAINER ── */
+        .container { padding: 1.5rem; max-width: 1400px; margin: 0 auto; }
+
+        /* ── PESTAÑAS ── */
+        .tabs {
+            display: flex; gap: 0.5rem;
+            background: var(--bg-card);
+            padding: 0.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            width: fit-content;
+        }
+        .tab-btn {
+            padding: 0.6rem 1.5rem;
+            background: transparent;
+            border: none; border-radius: 7px;
+            color: var(--texto-secondary);
+            font-weight: 600; cursor: pointer;
+            font-size: 0.85rem; transition: all 0.25s;
+            font-family: 'Montserrat', sans-serif;
+        }
+        .tab-btn.active {
+            background: var(--dorado);
+            color: #141921;
+            box-shadow: 0 3px 12px rgba(212,175,55,0.4);
+        }
+        .tab-btn:hover:not(.active) { background: rgba(255,255,255,0.08); color: white; }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            margin-bottom: 1.5rem;
+        }
+        .card-title {
+            font-size: 1rem; font-weight: 700;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 2px solid rgba(255,255,255,0.08);
+            display: flex; align-items: center; gap: 0.6rem;
+        }
+
+        /* ── FORMULARIO INDIVIDUAL ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+        }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group label {
+            font-size: 0.78rem; font-weight: 600;
+            color: var(--texto-secondary); text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-group input,
+        .form-group select {
+            padding: 0.65rem 0.9rem;
+            background: var(--bg-darker);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 7px;
+            color: white;
+            font-size: 0.9rem;
+            font-family: 'Montserrat', sans-serif;
+            transition: border-color 0.25s;
+            outline: none;
+        }
+        .form-group input:focus,
+        .form-group select:focus { border-color: var(--dorado); }
+        .form-group select option { background: #252d3d; }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none; border-radius: 8px;
+            font-weight: 700; cursor: pointer;
+            font-size: 0.85rem; font-family: 'Montserrat', sans-serif;
+            transition: all 0.25s;
+        }
+        .btn-primary { background: var(--dorado); color: #141921; }
+        .btn-primary:hover { background: #e8c547; transform: translateY(-1px); }
+        .btn-danger { background: var(--rojo); color: white; }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.18); }
+        .btn-success { background: var(--verde-ok); color: white; }
+        .btn-success:hover { background: #219a52; }
+
+        /* ── CARGA EXCEL ── */
+        .drop-zone {
+            border: 2px dashed rgba(212,175,55,0.4);
+            border-radius: 10px;
+            padding: 2.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(212,175,55,0.04);
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            border-color: var(--dorado);
+            background: rgba(212,175,55,0.08);
+        }
+        .drop-zone .icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+        .drop-zone p { color: var(--texto-secondary); font-size: 0.9rem; }
+        .drop-zone strong { color: var(--dorado); }
+        #file-input { display: none; }
+
+        .preview-table-wrap {
+            overflow-x: auto;
+            margin-top: 1rem;
+            max-height: 320px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+        }
+        .preview-table th {
+            background: rgba(212,175,55,0.15);
+            color: var(--dorado);
+            padding: 0.6rem 0.9rem;
+            text-align: left;
+            font-weight: 700;
+            position: sticky; top: 0;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+        .preview-table td {
+            padding: 0.5rem 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: var(--texto);
+        }
+        .preview-table tr:hover td { background: rgba(255,255,255,0.04); }
+        .preview-table tr.error td { background: rgba(231,76,60,0.12); }
+        .preview-table .badge-renta {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .badge-predial { background: rgba(52,152,219,0.25); color: #5dade2; }
+        .badge-ica { background: rgba(212,175,55,0.25); color: var(--dorado); }
+
+        .upload-actions {
+            display: flex; gap: 0.8rem;
+            align-items: center;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        #preview-count { color: var(--texto-secondary); font-size: 0.82rem; }
+
+        /* ── COLUMNAS ESPERADAS ── */
+        .columns-hint {
+            background: rgba(52,152,219,0.1);
+            border: 1px solid rgba(52,152,219,0.3);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1.2rem;
+            font-size: 0.82rem;
+        }
+        .columns-hint h4 { color: #5dade2; margin-bottom: 0.6rem; font-size: 0.88rem; }
+        .col-list { display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .col-tag {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 5px;
+            padding: 0.2rem 0.6rem;
+            font-family: monospace;
+            font-size: 0.82rem;
+            color: #e8e8e8;
+        }
+        .col-tag.requerido { border-color: var(--dorado); color: var(--dorado); }
+
+        /* ── TABLA DE DATOS ── */
+        .data-toolbar {
+            display: flex; gap: 0.8rem; align-items: center;
+            margin-bottom: 1rem; flex-wrap: wrap;
+        }
+        .search-input {
+            padding: 0.55rem 0.9rem;
+            background: var(--bg-darker);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 7px; color: white;
+            font-size: 0.85rem; font-family: 'Montserrat', sans-serif;
+            outline: none; width: 220px;
+            transition: border-color 0.25s;
+        }
+        .search-input:focus { border-color: var(--dorado); }
+        .filter-select {
+            padding: 0.55rem 0.9rem;
+            background: var(--bg-darker);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 7px; color: white;
+            font-size: 0.85rem; font-family: 'Montserrat', sans-serif;
+            outline: none; cursor: pointer;
+        }
+        .filter-select option { background: #252d3d; }
+        #total-registros { color: var(--texto-secondary); font-size: 0.82rem; margin-left: auto; }
+
+        .data-table-wrap {
+            overflow-x: auto;
+            max-height: 500px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+        .data-table th {
+            background: rgba(45,80,22,0.6);
+            color: #c8e6a0;
+            padding: 0.65rem 0.9rem;
+            text-align: left; font-weight: 700;
+            position: sticky; top: 0;
+            text-transform: uppercase; font-size: 0.72rem;
+            white-space: nowrap;
+        }
+        .data-table td {
+            padding: 0.5rem 0.9rem;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            vertical-align: middle;
+        }
+        .data-table tr:hover td { background: rgba(255,255,255,0.04); }
+        .action-btns { display: flex; gap: 0.4rem; }
+        .btn-sm {
+            padding: 0.3rem 0.65rem;
+            font-size: 0.75rem; border-radius: 5px;
+        }
+
+        /* Modal edición */
+        .modal-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.65);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: var(--bg-card);
+            border-radius: 14px;
+            padding: 1.8rem;
+            width: 90%; max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        .modal-title {
+            font-size: 1rem; font-weight: 700;
+            margin-bottom: 1.2rem; color: var(--dorado);
+        }
+        .modal-actions { display: flex; gap: 0.8rem; justify-content: flex-end; margin-top: 1.2rem; }
+
+        /* ── NOTIFICACIONES ── */
+        #notif-container {
+            position: fixed; top: 4.5rem; right: 1.5rem;
+            z-index: 2000;
+            display: flex; flex-direction: column; gap: 0.6rem;
+        }
+        .notif {
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            font-size: 0.85rem; font-weight: 600;
+            max-width: 320px;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .notif.success { background: var(--verde-ok); color: white; }
+        .notif.error { background: var(--rojo); color: white; }
+        .notif.warning { background: #e67e22; color: white; }
+        .notif.info { background: var(--azul); color: white; }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ── SPINNER ── */
+        .spinner {
+            display: inline-block;
+            width: 14px; height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            vertical-align: middle; margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── STATS ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .stat-card {
+            background: var(--bg-card);
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            border-left: 3px solid var(--dorado);
+        }
+        .stat-label { font-size: 0.72rem; color: var(--texto-secondary); text-transform: uppercase; }
+        .stat-value { font-size: 1.4rem; font-weight: 800; margin-top: 0.2rem; }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container { padding: 1rem; }
+            .header { padding: 0.75rem 1rem; }
+            .header-title p { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <div class="logo">G</div>
+        <div class="header-title">
+            <h1>Carga de Datos - Hacienda</h1>
+            <p>Alcaldía de Guatapé · Módulo de Administración</p>
+        </div>
+    </div>
+    <a class="header-btn" href="hacienda.html">← Ver Tablero</a>
+</div>
+
+<!-- BARRA DE ESTADO FIREBASE -->
+<div class="status-bar">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-text">Conectando a Firebase...</span>
+    <span id="status-proyecto" style="color:var(--texto-secondary);"></span>
+</div>
+
+<!-- ESTADÍSTICAS RÁPIDAS -->
+<div class="container">
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Registros</div>
+            <div class="stat-value" id="stat-total">—</div>
+        </div>
+        <div class="stat-card" style="border-color:#5dade2;">
+            <div class="stat-label">Registros Predial</div>
+            <div class="stat-value" id="stat-predial">—</div>
+        </div>
+        <div class="stat-card" style="border-color:var(--dorado);">
+            <div class="stat-label">Registros ICA</div>
+            <div class="stat-value" id="stat-ica">—</div>
+        </div>
+        <div class="stat-card" style="border-color:#27ae60;">
+            <div class="stat-label">Años con datos</div>
+            <div class="stat-value" id="stat-anios">—</div>
+        </div>
+    </div>
+
+    <!-- PESTAÑAS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="cambiarTab('agregar')">➕ Agregar Registro</button>
+        <button class="tab-btn" onclick="cambiarTab('excel')">📂 Carga Masiva Excel</button>
+        <button class="tab-btn" onclick="cambiarTab('datos')">📋 Ver / Editar Datos</button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- TAB 1: AGREGAR REGISTRO INDIVIDUAL               -->
+    <!-- ════════════════════════════════════════════════ -->
+    <div class="tab-panel active" id="tab-agregar">
+        <div class="card">
+            <div class="card-title">➕ Nuevo Registro de Recaudo</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Año *</label>
+                    <select id="f-anio">
+                        <option value="">Seleccionar...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Tipo de Renta *</label>
+                    <select id="f-renta">
+                        <option value="">Seleccionar...</option>
+                        <option value="PREDIAL">🏘️ PREDIAL</option>
+                        <option value="ICA">🏢 ICA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Mes / Período *</label>
+                    <select id="f-trimestre">
+                        <option value="">Seleccionar...</option>
+                        <option value="Jan">Enero</option>
+                        <option value="Feb">Febrero</option>
+                        <option value="Mar">Marzo</option>
+                        <option value="Apr">Abril</option>
+                        <option value="May">Mayo</option>
+                        <option value="Jun">Junio</option>
+                        <option value="Jul">Julio</option>
+                        <option value="Aug">Agosto</option>
+                        <option value="Sep">Septiembre</option>
+                        <option value="Oct">Octubre</option>
+                        <option value="Nov">Noviembre</option>
+                        <option value="Dec">Diciembre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Valor Recaudado (COP) *</label>
+                    <input type="number" id="f-valor" placeholder="Ej: 125000000" min="0" step="1">
+                </div>
+            </div>
+            <div style="display:flex; gap:0.8rem; flex-wrap:wrap; align-items:center;">
+                <button class="btn btn-primary" id="btn-guardar" onclick="guardarRegistro()">💾 Guardar Registro</button>
+                <button class="btn btn-secondary" onclick="limpiarFormulario()">🗑️ Limpiar</button>
+            </div>
+            <!-- Área de error inline -->
+            <div id="form-error" style="display:none; margin-top:1rem; padding:0.9rem 1.2rem; background:rgba(231,76,60,0.15); border:1px solid rgba(231,76,60,0.5); border-radius:8px; color:#ff8a80; font-size:0.85rem; font-weight:600;"></div>
+            <div id="form-success" style="display:none; margin-top:1rem; padding:0.9rem 1.2rem; background:rgba(39,174,96,0.15); border:1px solid rgba(39,174,96,0.5); border-radius:8px; color:#69f0ae; font-size:0.85rem; font-weight:600;"></div>
+        </div>
+
+        <!-- Vista previa del registro -->
+        <div class="card" id="preview-registro" style="display:none;">
+            <div class="card-title">👁️ Vista Previa del Último Registro Guardado</div>
+            <div id="preview-content" style="font-size:0.9rem; color:var(--texto-secondary);"></div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- TAB 2: CARGA MASIVA EXCEL                       -->
+    <!-- ════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-excel">
+        <div class="card">
+            <div class="card-title">📋 Formato Requerido del Archivo</div>
+            <div class="columns-hint">
+                <h4>📌 Columnas que debe tener el Excel o CSV:</h4>
+                <div class="col-list">
+                    <span class="col-tag requerido">AÑO</span>
+                    <span class="col-tag requerido">RENTA</span>
+                    <span class="col-tag requerido">TRIMESTRE</span>
+                    <span class="col-tag requerido">VALOR</span>
+                </div>
+                <p style="margin-top:0.8rem; color:var(--texto-secondary);">
+                    <strong style="color:white;">AÑO:</strong> número del año (ej: 2024) &nbsp;|&nbsp;
+                    <strong style="color:white;">RENTA:</strong> PREDIAL o ICA &nbsp;|&nbsp;
+                    <strong style="color:white;">TRIMESTRE:</strong> abreviatura mes-año en inglés (ej: Jan-24) &nbsp;|&nbsp;
+                    <strong style="color:white;">VALOR:</strong> monto en pesos (ej: 125000000)
+                </p>
+                <p style="margin-top:0.5rem; color:#e8a020;">
+                    ⚠️ Meses válidos: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+                </p>
+            </div>
+            <button class="btn btn-secondary" onclick="descargarPlantilla()" style="margin-bottom:1rem;">
+                ⬇️ Descargar Plantilla Excel
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">📂 Cargar Archivo</div>
+            <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <div class="icon">📊</div>
+                <p><strong>Haz clic aquí</strong> o arrastra tu archivo</p>
+                <p style="margin-top:0.4rem;">Formatos aceptados: <strong>.xlsx, .xls, .csv</strong></p>
+            </div>
+            <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="procesarArchivo(event)">
+
+            <div id="excel-preview" style="display:none; margin-top:1rem;">
+                <div class="card-title" style="margin-bottom:0.8rem;">
+                    👁️ Vista Previa — <span id="preview-count"></span>
+                </div>
+                <div class="preview-table-wrap">
+                    <table class="preview-table" id="preview-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>AÑO</th>
+                                <th>RENTA</th>
+                                <th>TRIMESTRE</th>
+                                <th>VALOR</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preview-tbody"></tbody>
+                    </table>
+                </div>
+                <div class="upload-actions">
+                    <button class="btn btn-success" id="btn-subir" onclick="subirExcel()">
+                        ☁️ Subir a Firebase
+                    </button>
+                    <button class="btn btn-secondary" onclick="cancelarExcel()">✖️ Cancelar</button>
+                    <span id="preview-count-label"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════ -->
+    <!-- TAB 3: VER / EDITAR DATOS                       -->
+    <!-- ════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-datos">
+        <div class="card">
+            <div class="card-title">📋 Registros en Firebase</div>
+
+            <div class="data-toolbar">
+                <input type="text" class="search-input" id="search-input"
+                    placeholder="🔍 Buscar..." oninput="filtrarTabla()">
+                <select class="filter-select" id="filter-anio" onchange="filtrarTabla()">
+                    <option value="">Todos los años</option>
+                </select>
+                <select class="filter-select" id="filter-renta" onchange="filtrarTabla()">
+                    <option value="">Todas las rentas</option>
+                    <option value="PREDIAL">PREDIAL</option>
+                    <option value="ICA">ICA</option>
+                </select>
+                <button class="btn btn-secondary" onclick="cargarDatos()" style="font-size:0.8rem; padding:0.5rem 0.9rem;">
+                    🔄 Actualizar
+                </button>
+                <span id="total-registros"></span>
+            </div>
+
+            <div class="data-table-wrap">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>AÑO</th>
+                            <th>RENTA</th>
+                            <th>TRIMESTRE</th>
+                            <th>VALOR</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="data-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div><!-- /container -->
+
+<!-- MODAL EDICIÓN -->
+<div class="modal-overlay" id="modal-editar">
+    <div class="modal">
+        <div class="modal-title">✏️ Editar Registro</div>
+        <input type="hidden" id="edit-id">
+        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="form-group">
+                <label>Año</label>
+                <select id="edit-anio"></select>
+            </div>
+            <div class="form-group">
+                <label>Renta</label>
+                <select id="edit-renta">
+                    <option value="PREDIAL">PREDIAL</option>
+                    <option value="ICA">ICA</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Mes</label>
+                <select id="edit-trimestre">
+                    <option value="Jan">Enero</option>
+                    <option value="Feb">Febrero</option>
+                    <option value="Mar">Marzo</option>
+                    <option value="Apr">Abril</option>
+                    <option value="May">Mayo</option>
+                    <option value="Jun">Junio</option>
+                    <option value="Jul">Julio</option>
+                    <option value="Aug">Agosto</option>
+                    <option value="Sep">Septiembre</option>
+                    <option value="Oct">Octubre</option>
+                    <option value="Nov">Noviembre</option>
+                    <option value="Dec">Diciembre</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Valor (COP)</label>
+                <input type="number" id="edit-valor" min="0" step="1">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn btn-primary" onclick="guardarEdicion()">💾 Guardar Cambios</button>
+        </div>
+    </div>
+</div>
+
+<!-- NOTIFICACIONES -->
+<div id="notif-container"></div>
+
+<script>
+// ============================================================
+// 🔥 FIREBASE CONFIG — mismo proyecto que hacienda.html
+// ============================================================
+const firebaseConfig = {
+    apiKey: "AIzaSyCtcqOSIQ7CBgXOCM_tq6LLKjDeLLbPhiQ",
+    authDomain: "recaudo-bc823.firebaseapp.com",
+    projectId: "recaudo-bc823",
+    storageBucket: "recaudo-bc823.firebasestorage.app",
+    messagingSenderId: "318995832964",
+    appId: "1:318995832964:web:bda23a7037ce663fe2e2d1"
+};
+
+let db = null;
+let firebaseOk = false;
+let todosLosRegistros = [];  // cache local
+let datosExcel = [];          // filas del excel
+
+const MESES_ES = {
+    Jan:'Enero', Feb:'Febrero', Mar:'Marzo', Apr:'Abril',
+    May:'Mayo', Jun:'Junio', Jul:'Julio', Aug:'Agosto',
+    Sep:'Septiembre', Oct:'Octubre', Nov:'Noviembre', Dec:'Diciembre'
+};
+const MESES_NUM = {
+    Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6,
+    Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12
+};
+const MESES_VALIDOS = Object.keys(MESES_ES);
+
+// ── Inicializar Firebase ────────────────────────────────────
+(function initFirebase() {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        firebaseOk = true;
+        setStatus(true, `Conectado · Proyecto: ${firebaseConfig.projectId}`);
+        cargarDatos();
+    } catch (e) {
+        setStatus(false, 'Error al conectar con Firebase: ' + e.message);
+        notif('❌ No se pudo conectar a Firebase', 'error');
+    }
+})();
+
+// ── Poblar selector de años ────────────────────────────────
+(function poblarAnios() {
+    const anioActual = new Date().getFullYear();
+    const selectores = ['f-anio', 'edit-anio', 'filter-anio'];
+    selectores.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        if (id === 'filter-anio') {
+            // Ya tiene "Todos los años"
+        }
+        for (let y = 2015; y <= anioActual + 1; y++) {
+            const opt = document.createElement('option');
+            opt.value = y; opt.textContent = y;
+            sel.appendChild(opt);
+        }
+    });
+})();
+
+// ============================================================
+// UTILIDADES
+// ============================================================
+function setStatus(ok, msg) {
+    document.getElementById('status-dot').className = 'status-dot' + (ok ? ' conectado' : '');
+    document.getElementById('status-text').textContent = ok ? '✅ ' + msg : '❌ ' + msg;
+}
+
+function notif(msg, tipo = 'info', duracion = 4000) {
+    const c = document.getElementById('notif-container');
+    const el = document.createElement('div');
+    el.className = 'notif ' + tipo;
+    el.textContent = msg;
+    c.appendChild(el);
+    setTimeout(() => el.remove(), duracion);
+}
+
+function fmtPeso(v) {
+    return '$' + Number(v).toLocaleString('es-CO');
+}
+
+function cambiarTab(tab) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+    if (tab === 'datos') cargarDatos();
+}
+
+function limpiarFormulario() {
+    ['f-anio','f-renta','f-trimestre'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-valor').value = '';
+    ocultarMensajesForm();
+}
+
+// ============================================================
+// TAB 1 — GUARDAR REGISTRO INDIVIDUAL
+// ============================================================
+function mostrarErrorForm(msg) {
+    const el = document.getElementById('form-error');
+    el.innerHTML = msg;
+    el.style.display = 'block';
+    document.getElementById('form-success').style.display = 'none';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function mostrarExitoForm(msg) {
+    const el = document.getElementById('form-success');
+    el.innerHTML = msg;
+    el.style.display = 'block';
+    document.getElementById('form-error').style.display = 'none';
+}
+function ocultarMensajesForm() {
+    document.getElementById('form-error').style.display = 'none';
+    document.getElementById('form-success').style.display = 'none';
+}
+
+async function guardarRegistro() {
+    ocultarMensajesForm();
+
+    if (!firebaseOk || !db) {
+        mostrarErrorForm('❌ Firebase no está conectado. Recarga la página e intenta de nuevo.');
+        return;
+    }
+
+    const anio   = parseInt(document.getElementById('f-anio').value);
+    const renta  = document.getElementById('f-renta').value.trim().toUpperCase();
+    const mes    = document.getElementById('f-trimestre').value;
+    const valor  = parseFloat(document.getElementById('f-valor').value);
+
+    // Validación con mensajes claros por campo
+    if (!anio) { mostrarErrorForm('⚠️ Selecciona el <strong>Año</strong>.'); return; }
+    if (!renta) { mostrarErrorForm('⚠️ Selecciona el <strong>Tipo de Renta</strong> (PREDIAL o ICA).'); return; }
+    if (!mes) { mostrarErrorForm('⚠️ Selecciona el <strong>Mes / Período</strong>.'); return; }
+    if (isNaN(valor) || valor < 0) { mostrarErrorForm('⚠️ Ingresa un <strong>Valor</strong> numérico válido mayor o igual a 0.'); return; }
+
+    const añoCorto  = String(anio).slice(-2);
+    const trimestre = `${mes}-${añoCorto}`;
+    const docData   = { AÑO: anio, RENTA: renta, TRIMESTRE: trimestre, VALOR: valor };
+
+    const btn = document.getElementById('btn-guardar');
+    btn.innerHTML = '<span class="spinner"></span> Guardando...';
+    btn.disabled = true;
+
+    console.log('📤 Intentando guardar en Firebase:', docData);
+
+    try {
+        const ref = await db.collection('Recaudo').add(docData);
+        console.log('✅ Guardado con ID:', ref.id);
+        mostrarExitoForm(`✅ Registro guardado correctamente · ${renta} ${MESES_ES[mes]} ${anio} · ${fmtPeso(valor)}`);
+        notif(`✅ Guardado: ${renta} ${MESES_ES[mes]} ${anio}`, 'success');
+        mostrarPreview(docData);
+        limpiarFormulario();
+        cargarDatos();
+    } catch (e) {
+        console.error('❌ Error Firebase al guardar:', e);
+        let mensajeError = '❌ Error al guardar: ' + e.message;
+        if (e.code === 'permission-denied' || (e.message && e.message.includes('permission'))) {
+            mensajeError = `🔒 <strong>Sin permisos de escritura en Firebase.</strong><br><br>
+                Debes actualizar las reglas de Firestore en la consola de Firebase:<br>
+                <code style="background:rgba(0,0,0,0.3);padding:4px 8px;border-radius:4px;display:inline-block;margin-top:6px;font-size:0.82rem;">
+                allow read, write: if true;
+                </code><br><br>
+                Ve a: <a href="https://console.firebase.google.com/project/recaudo-bc823/firestore/rules" target="_blank" style="color:#69f0ae;">
+                Firebase Console → Firestore → Reglas</a>`;
+        }
+        mostrarErrorForm(mensajeError);
+        notif('❌ Error al guardar. Ver detalle en el formulario.', 'error', 6000);
+    } finally {
+        btn.innerHTML = '💾 Guardar Registro';
+        btn.disabled = false;
+    }
+}
+
+function mostrarPreview(doc) {
+    document.getElementById('preview-registro').style.display = 'block';
+    document.getElementById('preview-content').innerHTML = `
+        <table style="border-collapse:collapse; min-width:300px;">
+            <tr><td style="padding:4px 12px 4px 0; color:var(--texto-secondary);">Año:</td><td style="font-weight:700;">${doc.AÑO}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0; color:var(--texto-secondary);">Renta:</td><td><span class="badge-renta badge-${doc.RENTA.toLowerCase()}">${doc.RENTA}</span></td></tr>
+            <tr><td style="padding:4px 12px 4px 0; color:var(--texto-secondary);">Período:</td><td>${doc.TRIMESTRE}</td></tr>
+            <tr><td style="padding:4px 12px 4px 0; color:var(--texto-secondary);">Valor:</td><td style="font-weight:700; color:var(--dorado);">${fmtPeso(doc.VALOR)}</td></tr>
+        </table>`;
+}
+
+// ============================================================
+// TAB 2 — EXCEL
+// ============================================================
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault(); dropZone.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) procesarArchivoObj(file);
+});
+
+function procesarArchivo(event) {
+    const file = event.target.files[0];
+    if (file) procesarArchivoObj(file);
+}
+
+function procesarArchivoObj(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx','xls','csv'].includes(ext)) {
+        notif('❌ Formato no válido. Use .xlsx, .xls o .csv', 'error');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type: 'array' });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+            procesarFilas(rows);
+        } catch (err) {
+            notif('❌ Error leyendo el archivo: ' + err.message, 'error');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function procesarFilas(rows) {
+    datosExcel = [];
+    const tbody = document.getElementById('preview-tbody');
+    tbody.innerHTML = '';
+
+    let validos = 0, invalidos = 0;
+
+    rows.forEach((row, i) => {
+        // Normalizar columnas (mayúsculas, trim)
+        const norm = {};
+        Object.keys(row).forEach(k => { norm[k.toUpperCase().trim()] = row[k]; });
+
+        const anio   = parseInt(norm['AÑO'] || norm['ANO'] || norm['YEAR'] || '');
+        const renta  = String(norm['RENTA'] || '').trim().toUpperCase();
+        const trim   = String(norm['TRIMESTRE'] || norm['MES'] || norm['PERIOD'] || '').trim();
+        const valor  = parseFloat(String(norm['VALOR'] || norm['VALUE'] || '').replace(/[^0-9.-]/g, ''));
+
+        // Validar
+        const errores = [];
+        if (!anio || anio < 2000 || anio > 2100) errores.push('Año inválido');
+        if (!['PREDIAL','ICA'].includes(renta)) errores.push('Renta debe ser PREDIAL o ICA');
+        const mesParte = trim.split('-')[0];
+        if (!MESES_VALIDOS.includes(mesParte)) errores.push(`Mes inválido (${mesParte})`);
+        if (isNaN(valor) || valor < 0) errores.push('Valor inválido');
+
+        const esValido = errores.length === 0;
+        if (esValido) validos++; else invalidos++;
+
+        const obj = { AÑO: anio, RENTA: renta, TRIMESTRE: trim, VALOR: valor, _valido: esValido, _error: errores.join(', ') };
+        datosExcel.push(obj);
+
+        const tr = document.createElement('tr');
+        if (!esValido) tr.className = 'error';
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${anio || '?'}</td>
+            <td><span class="badge-renta badge-${renta.toLowerCase()}">${renta || '?'}</span></td>
+            <td>${trim || '?'}</td>
+            <td>${isNaN(valor) ? '?' : fmtPeso(valor)}</td>
+            <td>${esValido ? '✅' : '❌ ' + errores.join(', ')}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('preview-count').textContent =
+        `${rows.length} filas · ✅ ${validos} válidas · ❌ ${invalidos} con errores`;
+    document.getElementById('preview-count-label').textContent =
+        invalidos > 0 ? `⚠️ ${invalidos} filas con errores no se subirán` : '✅ Todas las filas son válidas';
+    document.getElementById('excel-preview').style.display = 'block';
+    document.getElementById('btn-subir').textContent = `☁️ Subir ${validos} registros a Firebase`;
+}
+
+async function subirExcel() {
+    const validos = datosExcel.filter(d => d._valido);
+    if (validos.length === 0) { notif('⚠️ No hay registros válidos para subir', 'warning'); return; }
+
+    const btn = document.getElementById('btn-subir');
+    btn.innerHTML = '<span class="spinner"></span> Subiendo...';
+    btn.disabled = true;
+
+    const LOTE = 400; // Firestore limita 500 ops por batch
+    let subidos = 0;
+
+    try {
+        for (let i = 0; i < validos.length; i += LOTE) {
+            const batch = db.batch();
+            const trozo = validos.slice(i, i + LOTE);
+            trozo.forEach(d => {
+                const ref = db.collection('Recaudo').doc();
+                batch.set(ref, { AÑO: d.AÑO, RENTA: d.RENTA, TRIMESTRE: d.TRIMESTRE, VALOR: d.VALOR });
+            });
+            await batch.commit();
+            subidos += trozo.length;
+        }
+
+        notif(`✅ ${subidos} registros subidos correctamente`, 'success', 6000);
+        cancelarExcel();
+        cargarDatos();
+    } catch (e) {
+        notif('❌ Error al subir: ' + e.message, 'error');
+        btn.innerHTML = '☁️ Reintentar';
+        btn.disabled = false;
+    }
+}
+
+function cancelarExcel() {
+    document.getElementById('excel-preview').style.display = 'none';
+    document.getElementById('file-input').value = '';
+    datosExcel = [];
+    document.getElementById('btn-subir').innerHTML = '☁️ Subir a Firebase';
+    document.getElementById('btn-subir').disabled = false;
+}
+
+function descargarPlantilla() {
+    const data = [
+        { AÑO: 2024, RENTA: 'PREDIAL', TRIMESTRE: 'Jan-24', VALOR: 125000000 },
+        { AÑO: 2024, RENTA: 'PREDIAL', TRIMESTRE: 'Feb-24', VALOR: 98000000 },
+        { AÑO: 2024, RENTA: 'ICA',     TRIMESTRE: 'Jan-24', VALOR: 45000000 },
+        { AÑO: 2024, RENTA: 'ICA',     TRIMESTRE: 'Mar-24', VALOR: 52000000 },
+        { AÑO: 2025, RENTA: 'PREDIAL', TRIMESTRE: 'Jan-25', VALOR: 135000000 },
+    ];
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Recaudo');
+    XLSX.writeFile(wb, 'plantilla-hacienda-guatape.xlsx');
+    notif('✅ Plantilla descargada', 'success');
+}
+
+// ============================================================
+// TAB 3 — CARGAR Y MOSTRAR DATOS
+// ============================================================
+async function cargarDatos() {
+    if (!firebaseOk) return;
+    document.getElementById('data-tbody').innerHTML =
+        '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--texto-secondary);"><span class="spinner"></span> Cargando...</td></tr>';
+
+    try {
+        const snap = await db.collection('Recaudo').get();
+        todosLosRegistros = [];
+        snap.forEach(doc => {
+            todosLosRegistros.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Ordenar por año y mes
+        todosLosRegistros.sort((a, b) => {
+            if (a.AÑO !== b.AÑO) return a.AÑO - b.AÑO;
+            const ma = MESES_NUM[String(a.TRIMESTRE).split('-')[0]] || 0;
+            const mb = MESES_NUM[String(b.TRIMESTRE).split('-')[0]] || 0;
+            return ma - mb;
+        });
+
+        actualizarStats();
+        poblarFiltroAnio();
+        filtrarTabla();
+    } catch (e) {
+        notif('❌ Error cargando datos: ' + e.message, 'error');
+        document.getElementById('data-tbody').innerHTML =
+            '<tr><td colspan="5" style="text-align:center; color:#e74c3c; padding:2rem;">Error al cargar datos</td></tr>';
+    }
+}
+
+function actualizarStats() {
+    const total    = todosLosRegistros.length;
+    const predial  = todosLosRegistros.filter(r => r.RENTA === 'PREDIAL').length;
+    const ica      = todosLosRegistros.filter(r => r.RENTA === 'ICA').length;
+    const anios    = new Set(todosLosRegistros.map(r => r.AÑO)).size;
+
+    document.getElementById('stat-total').textContent   = total;
+    document.getElementById('stat-predial').textContent = predial;
+    document.getElementById('stat-ica').textContent     = ica;
+    document.getElementById('stat-anios').textContent   = anios;
+}
+
+function poblarFiltroAnio() {
+    const sel = document.getElementById('filter-anio');
+    const actual = sel.value;
+    // Mantener opción "Todos"
+    while (sel.options.length > 1) sel.remove(1);
+    const anios = [...new Set(todosLosRegistros.map(r => r.AÑO))].sort();
+    anios.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a; opt.textContent = a;
+        sel.appendChild(opt);
+    });
+    if (actual) sel.value = actual;
+}
+
+function filtrarTabla() {
+    const busq   = document.getElementById('search-input').value.toLowerCase();
+    const anio   = document.getElementById('filter-anio').value;
+    const renta  = document.getElementById('filter-renta').value;
+
+    const filtrado = todosLosRegistros.filter(r => {
+        const coincideAnio  = !anio  || String(r.AÑO) === anio;
+        const coincideRenta = !renta || r.RENTA === renta;
+        const coincideBusq  = !busq  || JSON.stringify(r).toLowerCase().includes(busq);
+        return coincideAnio && coincideRenta && coincideBusq;
+    });
+
+    renderTabla(filtrado);
+    document.getElementById('total-registros').textContent =
+        `${filtrado.length} de ${todosLosRegistros.length} registros`;
+}
+
+function renderTabla(registros) {
+    const tbody = document.getElementById('data-tbody');
+    if (registros.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--texto-secondary);">No hay registros</td></tr>';
+        return;
+    }
+    tbody.innerHTML = registros.map(r => `
+        <tr>
+            <td>${r.AÑO}</td>
+            <td><span class="badge-renta badge-${(r.RENTA||'').toLowerCase()}">${r.RENTA}</span></td>
+            <td>${r.TRIMESTRE}</td>
+            <td>${fmtPeso(r.VALOR)}</td>
+            <td>
+                <div class="action-btns">
+                    <button class="btn btn-secondary btn-sm" onclick="abrirEditar('${r.id}')">✏️ Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarRegistro('${r.id}', '${r.RENTA} ${r.TRIMESTRE} ${r.AÑO}')">🗑️</button>
+                </div>
+            </td>
+        </tr>`).join('');
+}
+
+// ============================================================
+// EDITAR
+// ============================================================
+function abrirEditar(id) {
+    const r = todosLosRegistros.find(x => x.id === id);
+    if (!r) return;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-anio').value  = r.AÑO;
+    document.getElementById('edit-renta').value = r.RENTA;
+    const mesParte = String(r.TRIMESTRE).split('-')[0];
+    document.getElementById('edit-trimestre').value = mesParte;
+    document.getElementById('edit-valor').value = r.VALOR;
+    document.getElementById('modal-editar').classList.add('open');
+}
+
+function cerrarModal() {
+    document.getElementById('modal-editar').classList.remove('open');
+}
+
+async function guardarEdicion() {
+    const id    = document.getElementById('edit-id').value;
+    const anio  = parseInt(document.getElementById('edit-anio').value);
+    const renta = document.getElementById('edit-renta').value;
+    const mes   = document.getElementById('edit-trimestre').value;
+    const valor = parseFloat(document.getElementById('edit-valor').value);
+
+    if (!id || !anio || !renta || !mes || isNaN(valor)) {
+        notif('⚠️ Completa todos los campos', 'warning'); return;
+    }
+
+    const añoCorto  = String(anio).slice(-2);
+    const trimestre = `${mes}-${añoCorto}`;
+
+    try {
+        await db.collection('Recaudo').doc(id).update({ AÑO: anio, RENTA: renta, TRIMESTRE: trimestre, VALOR: valor });
+        notif('✅ Registro actualizado', 'success');
+        cerrarModal();
+        cargarDatos();
+    } catch (e) {
+        notif('❌ Error: ' + e.message, 'error');
+    }
+}
+
+// ============================================================
+// ELIMINAR
+// ============================================================
+async function eliminarRegistro(id, desc) {
+    if (!confirm(`¿Eliminar el registro: ${desc}?\n\nEsta acción no se puede deshacer.`)) return;
+    try {
+        await db.collection('Recaudo').doc(id).delete();
+        notif(`🗑️ Registro eliminado: ${desc}`, 'warning');
+        cargarDatos();
+    } catch (e) {
+        notif('❌ Error al eliminar: ' + e.message, 'error');
+    }
+}
+
+// Cerrar modal al hacer clic fuera
+document.getElementById('modal-editar').addEventListener('click', function(e) {
+    if (e.target === this) cerrarModal();
+});
+</script>
+</body>
+</html>
