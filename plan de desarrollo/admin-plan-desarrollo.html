@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Plan de Desarrollo Guatapé</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-dark:   #1a2035;
+            --bg-darker: #111827;
+            --bg-card:   #1f2a3c;
+            --verde:     #1a6b3c;
+            --verde-cl:  #2e9e5e;
+            --dorado:    #f59e0b;
+            --azul:      #3b82f6;
+            --rojo:      #ef4444;
+            --ok:        #10b981;
+            --texto:     #f1f5f9;
+            --muted:     #94a3b8;
+            --border:    rgba(255,255,255,0.08);
+        }
+        body { font-family:'Montserrat','Segoe UI',sans-serif; background:var(--bg-darker); color:var(--texto); min-height:100vh; }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #0f4c2a, #1a6b3c, #2e9e5e);
+            padding: .75rem 2rem;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,.4);
+        }
+        .header-left { display:flex; align-items:center; gap:.8rem; }
+        .logo { width:42px; height:42px; background:white; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:1.3rem; color:#0f4c2a; }
+        .header-title h1 { font-size:1.05rem; font-weight:700; }
+        .header-title p  { font-size:.68rem; opacity:.85; }
+        .header-btn { padding:.5rem 1rem; background:rgba(255,255,255,.18); border:2px solid rgba(255,255,255,.28); border-radius:6px; color:white; font-weight:700; cursor:pointer; font-size:.78rem; text-transform:uppercase; text-decoration:none; transition:.2s; }
+        .header-btn:hover { background:rgba(255,255,255,.3); }
+
+        /* STATUS */
+        .status-bar { background:var(--bg-card); padding:.55rem 2rem; display:flex; align-items:center; gap:.7rem; font-size:.78rem; border-bottom:1px solid var(--border); }
+        .dot { width:9px; height:9px; border-radius:50%; background:#ef4444; box-shadow:0 0 7px #ef4444; flex-shrink:0; }
+        .dot.on { background:#10b981; box-shadow:0 0 7px #10b981; }
+
+        /* CONTAINER */
+        .container { padding:1.4rem; max-width:1500px; margin:0 auto; }
+
+        /* STATS */
+        .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:.9rem; margin-bottom:1.4rem; }
+        .stat { background:var(--bg-card); border-radius:10px; padding:.9rem 1.1rem; border-left:3px solid var(--dorado); }
+        .stat.azul  { border-color:var(--azul); }
+        .stat.verde { border-color:var(--ok); }
+        .stat.rojo  { border-color:var(--rojo); }
+        .stat-label { font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+        .stat-val   { font-size:1.6rem; font-weight:800; margin-top:.15rem; }
+
+        /* TABS */
+        .tabs { display:flex; gap:.4rem; background:var(--bg-card); padding:.45rem; border-radius:10px; margin-bottom:1.4rem; width:fit-content; }
+        .tab { padding:.55rem 1.3rem; background:transparent; border:none; border-radius:7px; color:var(--muted); font-weight:600; cursor:pointer; font-size:.82rem; font-family:'Montserrat',sans-serif; transition:.2s; }
+        .tab.active { background:var(--dorado); color:#111; box-shadow:0 3px 12px rgba(245,158,11,.35); }
+        .tab:hover:not(.active) { background:rgba(255,255,255,.07); color:var(--texto); }
+        .panel { display:none; }
+        .panel.active { display:block; }
+
+        /* CARD */
+        .card { background:var(--bg-card); border-radius:12px; padding:1.4rem; box-shadow:0 4px 20px rgba(0,0,0,.22); margin-bottom:1.4rem; }
+        .card-title { font-size:.95rem; font-weight:700; margin-bottom:1.1rem; padding-bottom:.7rem; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.5rem; }
+
+        /* TOOLBAR */
+        .toolbar { display:flex; gap:.7rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap; }
+        input[type=text], input[type=number], select, textarea {
+            padding:.58rem .85rem; background:var(--bg-darker); border:2px solid var(--border);
+            border-radius:7px; color:var(--texto); font-size:.84rem; font-family:'Montserrat',sans-serif;
+            outline:none; transition:border-color .2s;
+        }
+        input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus { border-color:var(--dorado); }
+        select option { background:#1f2a3c; }
+        .search { width:240px; }
+        .ml-auto { margin-left:auto; color:var(--muted); font-size:.8rem; }
+
+        /* BUTTONS */
+        .btn { padding:.6rem 1.2rem; border:none; border-radius:7px; font-weight:700; cursor:pointer; font-size:.82rem; font-family:'Montserrat',sans-serif; transition:.2s; }
+        .btn-primary { background:var(--dorado); color:#111; }
+        .btn-primary:hover { background:#fbbf24; }
+        .btn-success { background:var(--ok); color:white; }
+        .btn-success:hover { background:#059669; }
+        .btn-danger  { background:var(--rojo); color:white; }
+        .btn-danger:hover  { background:#dc2626; }
+        .btn-muted   { background:rgba(255,255,255,.09); color:var(--texto); border:1px solid var(--border); }
+        .btn-muted:hover { background:rgba(255,255,255,.16); }
+        .btn-sm { padding:.28rem .6rem; font-size:.73rem; border-radius:5px; }
+        .btn-edit { background:rgba(59,130,246,.18); color:#93c5fd; border:1px solid rgba(59,130,246,.3); }
+        .btn-edit:hover { background:rgba(59,130,246,.3); }
+        .btn-del  { background:rgba(239,68,68,.18); color:#fca5a5; border:1px solid rgba(239,68,68,.3); }
+        .btn-del:hover  { background:rgba(239,68,68,.3); }
+
+        /* TABLE */
+        .table-wrap { overflow-x:auto; border-radius:9px; border:1px solid var(--border); max-height:560px; }
+        table { width:100%; border-collapse:collapse; font-size:.8rem; }
+        thead th { background:rgba(15,76,42,.55); color:#86efac; padding:.6rem .85rem; text-align:left; position:sticky; top:0; font-size:.7rem; text-transform:uppercase; white-space:nowrap; font-weight:700; }
+        tbody td { padding:.48rem .85rem; border-bottom:1px solid var(--border); vertical-align:middle; }
+        tbody tr:hover td { background:rgba(255,255,255,.03); }
+        .badge { display:inline-block; padding:.12rem .45rem; border-radius:4px; font-size:.68rem; font-weight:700; }
+        .b-sec  { background:rgba(59,130,246,.2);  color:#93c5fd; }
+        .b-ok   { background:rgba(16,185,129,.2); color:#6ee7b7; }
+        .b-warn { background:rgba(245,158,11,.2);  color:#fcd34d; }
+        .b-bad  { background:rgba(239,68,68,.2);   color:#fca5a5; }
+        .cell-prog { max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+        /* PROGRESS BAR */
+        .pbar-wrap { width:80px; background:rgba(255,255,255,.08); border-radius:4px; height:6px; display:inline-block; vertical-align:middle; }
+        .pbar { height:100%; border-radius:4px; background:var(--ok); }
+        .pbar.warn { background:var(--dorado); }
+        .pbar.bad  { background:var(--rojo); }
+
+        /* FORM GRID */
+        .form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:.9rem; }
+        .form-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:.9rem; }
+        .fg { display:flex; flex-direction:column; gap:.35rem; }
+        .fg label { font-size:.72rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+        .fg textarea { resize:vertical; min-height:56px; }
+        .fg input[type=number] { width:100%; }
+        .fg.full { grid-column: 1 / -1; }
+
+        /* SECTION DIVIDER */
+        .section-div { margin:1.2rem 0 .9rem; padding-bottom:.5rem; border-bottom:1px solid var(--border); font-size:.8rem; font-weight:700; color:var(--dorado); text-transform:uppercase; letter-spacing:.06em; }
+
+        /* AVANCES GRID */
+        .avances-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:.8rem; }
+        .anio-card { background:var(--bg-darker); border-radius:9px; padding:.9rem; border:1px solid var(--border); }
+        .anio-label { font-size:.72rem; font-weight:700; color:var(--dorado); margin-bottom:.6rem; text-align:center; text-transform:uppercase; }
+        .anio-campo { margin-bottom:.5rem; }
+        .anio-campo label { font-size:.65rem; color:var(--muted); display:block; margin-bottom:.2rem; }
+        .anio-campo input { width:100%; }
+        .calc-hint { font-size:.66rem; color:var(--muted); margin-top:.3rem; }
+
+        /* MODAL */
+        .overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:1000; overflow-y:auto; padding:1.5rem; }
+        .overlay.open { display:flex; align-items:flex-start; justify-content:center; }
+        .modal { background:var(--bg-card); border-radius:14px; padding:1.8rem; width:100%; max-width:900px; box-shadow:0 24px 60px rgba(0,0,0,.5); margin:auto; }
+        .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.3rem; padding-bottom:.8rem; border-bottom:1px solid var(--border); }
+        .modal-title { font-size:1rem; font-weight:700; color:var(--dorado); }
+        .modal-close { background:none; border:none; color:var(--muted); font-size:1.4rem; cursor:pointer; line-height:1; }
+        .modal-close:hover { color:var(--texto); }
+        .modal-footer { display:flex; gap:.7rem; justify-content:flex-end; margin-top:1.3rem; padding-top:.9rem; border-top:1px solid var(--border); flex-wrap:wrap; }
+
+        /* INLINE MSG */
+        .msg { display:none; padding:.8rem 1rem; border-radius:8px; font-size:.82rem; font-weight:600; margin-top:.9rem; }
+        .msg.err  { background:rgba(239,68,68,.14); border:1px solid rgba(239,68,68,.45); color:#fca5a5; }
+        .msg.succ { background:rgba(16,185,129,.14); border:1px solid rgba(16,185,129,.45); color:#6ee7b7; }
+
+        /* NOTIF */
+        #notifbox { position:fixed; top:4.5rem; right:1.2rem; z-index:3000; display:flex; flex-direction:column; gap:.5rem; }
+        .notif { padding:.75rem 1.1rem; border-radius:8px; font-size:.82rem; font-weight:600; max-width:310px; animation:slideIn .3s ease; box-shadow:0 4px 18px rgba(0,0,0,.4); }
+        .notif.s { background:var(--ok); color:white; }
+        .notif.e { background:var(--rojo); color:white; }
+        .notif.w { background:#d97706; color:white; }
+        @keyframes slideIn { from{transform:translateX(110%);opacity:0} to{transform:translateX(0);opacity:1} }
+
+        /* SPINNER */
+        .spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.3); border-top-color:white; border-radius:50%; animation:rot .6s linear infinite; vertical-align:middle; margin-right:5px; }
+        @keyframes rot { to{transform:rotate(360deg)} }
+
+        /* ── DIAGNOSTICO ── */
+        .diag-box { background:rgba(59,130,246,.06); border:1px solid rgba(59,130,246,.22); border-radius:9px; padding:1rem 1.2rem; margin-top:1rem; }
+        .diag-box summary { cursor:pointer; font-size:.82rem; font-weight:700; color:#93c5fd; }
+        .diag-box table { width:100%; border-collapse:collapse; margin-top:.7rem; font-size:.75rem; }
+        .diag-box th { padding:.35rem .6rem; background:rgba(59,130,246,.12); color:#93c5fd; text-align:left; border-radius:4px; }
+        .diag-box td { padding:.3rem .6rem; border-bottom:1px solid var(--border); font-family:monospace; }
+        .diag-ok  { color:#6ee7b7; } .diag-err { color:#fca5a5; }
+
+        /* ── EXCEL PANEL ── */
+        .drop-zone {
+            border: 2px dashed rgba(245,158,11,.4); border-radius:10px;
+            padding: 2.5rem; text-align:center; cursor:pointer; transition:.3s;
+            background: rgba(245,158,11,.04);
+        }
+        .drop-zone:hover, .drop-zone.over { border-color:var(--dorado); background:rgba(245,158,11,.09); }
+        .drop-zone .dz-icon { font-size:2.5rem; margin-bottom:.7rem; }
+        .drop-zone p { color:var(--muted); font-size:.88rem; }
+        .drop-zone strong { color:var(--dorado); }
+        #xl-input { display:none; }
+
+        .mode-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.8rem; margin-bottom:1.2rem; }
+        .mode-card {
+            border:2px solid var(--border); border-radius:9px; padding:1rem; cursor:pointer; transition:.2s;
+            background:var(--bg-darker);
+        }
+        .mode-card:hover { border-color:rgba(245,158,11,.5); }
+        .mode-card input[type=radio] { display:none; }
+        .mode-card.selected { border-color:var(--dorado); background:rgba(245,158,11,.07); }
+        .mode-card-title { font-size:.88rem; font-weight:700; margin-bottom:.3rem; }
+        .mode-card-desc  { font-size:.72rem; color:var(--muted); line-height:1.4; }
+
+        .col-hint { background:rgba(59,130,246,.08); border:1px solid rgba(59,130,246,.25); border-radius:8px; padding:.9rem 1.1rem; margin-bottom:1.1rem; }
+        .col-hint h4 { color:#93c5fd; font-size:.82rem; margin-bottom:.5rem; }
+        .col-tags { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.4rem; }
+        .col-tag { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:4px; padding:.18rem .5rem; font-family:monospace; font-size:.78rem; }
+        .col-tag.req { border-color:var(--dorado); color:var(--dorado); }
+
+        .xl-prev-wrap { overflow-x:auto; max-height:340px; border-radius:8px; border:1px solid var(--border); margin-top:.8rem; }
+        .xl-prev { width:100%; border-collapse:collapse; font-size:.75rem; }
+        .xl-prev th { background:rgba(245,158,11,.12); color:var(--dorado); padding:.5rem .7rem; position:sticky; top:0; text-align:left; text-transform:uppercase; font-size:.68rem; white-space:nowrap; }
+        .xl-prev td { padding:.42rem .7rem; border-bottom:1px solid var(--border); white-space:nowrap; }
+        .xl-prev tr:hover td { background:rgba(255,255,255,.03); }
+        .xl-prev tr.row-err td { background:rgba(239,68,68,.08); }
+        .xl-actions { display:flex; gap:.8rem; align-items:center; margin-top:.9rem; flex-wrap:wrap; }
+
+        .prog-bar-wrap { background:rgba(255,255,255,.08); border-radius:6px; height:8px; overflow:hidden; margin-top:.5rem; }
+        .prog-bar-fill { height:100%; background:var(--ok); border-radius:6px; transition:width .3s; }
+
+        @media(max-width:700px) {
+            .avances-grid { grid-template-columns:1fr 1fr; }
+            .header { padding:.7rem 1rem; }
+            .container { padding:1rem; }
+        }
+        @media(max-width:500px) {
+            .avances-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <div class="header-left">
+        <div class="logo">G</div>
+        <div class="header-title">
+            <h1>Admin · Plan de Desarrollo</h1>
+            <p>Alcaldía de Guatapé · Juntos Construimos 2024-2027</p>
+        </div>
+    </div>
+    <a class="header-btn" href="plan_de_desarrollo.html">← Ver Tablero</a>
+</div>
+
+<!-- STATUS -->
+<div class="status-bar">
+    <div class="dot" id="dot"></div>
+    <span id="st-text">Conectando...</span>
+</div>
+
+<div class="container">
+
+    <!-- ESTADÍSTICAS -->
+    <div class="stats">
+        <div class="stat"><div class="stat-label">Total Programas</div><div class="stat-val" id="s-total">—</div></div>
+        <div class="stat azul"><div class="stat-label">Secretarías</div><div class="stat-val" id="s-secs">—</div></div>
+        <div class="stat verde"><div class="stat-label">Avance promedio</div><div class="stat-val" id="s-avg">—</div></div>
+        <div class="stat rojo"><div class="stat-label">Sin avance 2026</div><div class="stat-val" id="s-sin">—</div></div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab active" onclick="tab('lista',this)">📋 Programas</button>
+        <button class="tab" onclick="tab('nuevo',this)">➕ Nuevo Programa</button>
+        <button class="tab" onclick="tab('excel',this)">📂 Cargar Excel</button>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PANEL 1: LISTA                             -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="panel active" id="p-lista">
+        <div class="card">
+            <div class="card-title">📋 Todos los Programas</div>
+            <div class="toolbar">
+                <input type="text" class="search" id="buscar" placeholder="🔍 Buscar programa..." oninput="filtrar()">
+                <select id="fil-sec" onchange="filtrar()">
+                    <option value="">Todas las secretarías</option>
+                </select>
+                <select id="fil-linea" onchange="filtrar()">
+                    <option value="">Todas las líneas</option>
+                </select>
+                <button class="btn btn-muted" onclick="recargar()" style="font-size:.78rem;padding:.5rem .9rem;">🔄 Actualizar</button>
+                <span class="ml-auto" id="conteo"></span>
+                <button class="btn btn-danger" onclick="borrarTodoBD()" style="font-size:.78rem;padding:.5rem .9rem;">🗑️ Borrar toda la BD</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Secretaría</th>
+                            <th>Programa</th>
+                            <th>Indicador</th>
+                            <th>Meta 4 años</th>
+                            <th>Avance 2024</th>
+                            <th>Avance 2025</th>
+                            <th>Avance 2026</th>
+                            <th>% Total</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PANEL 2: NUEVO PROGRAMA                    -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="panel" id="p-nuevo">
+        <div class="card">
+            <div class="card-title">➕ Agregar Nuevo Programa</div>
+
+            <div class="section-div">Información General</div>
+            <div class="form-grid">
+                <div class="fg">
+                    <label>Secretaría *</label>
+                    <select id="n-sec" onchange="autoKey()">
+                        <option value="">Seleccionar...</option>
+                        <option>Secretaria de Gobierno</option>
+                        <option>Sec de Bienestar y Dllo Social</option>
+                        <option>Secretaria de Turismo</option>
+                        <option>Sec Planeacion y Obras Pub</option>
+                        <option>Sec Medio Ambiente y Dllo Rural</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Secretaría Key (auto)</label>
+                    <input type="text" id="n-seckey" placeholder="se genera automáticamente">
+                </div>
+                <div class="fg full">
+                    <label>Línea Estratégica *</label>
+                    <input type="text" id="n-linea" placeholder="Ej: 01. JUNTOS POR LA GOBERNANZA...">
+                </div>
+                <div class="fg full">
+                    <label>Componente *</label>
+                    <input type="text" id="n-comp" placeholder="Código y nombre del componente">
+                </div>
+                <div class="fg full">
+                    <label>Programa *</label>
+                    <input type="text" id="n-prog" placeholder="Código y nombre del programa">
+                </div>
+                <div class="fg">
+                    <label>Código producto</label>
+                    <input type="number" id="n-cod" placeholder="Ej: 450104800">
+                </div>
+                <div class="fg">
+                    <label>Indicador *</label>
+                    <input type="text" id="n-ind" placeholder="Ej: Estrategias implementadas">
+                </div>
+                <div class="fg">
+                    <label>Unidad</label>
+                    <select id="n-und">
+                        <option>Número</option>
+                        <option>Porcentaje</option>
+                        <option>%</option>
+                        <option>Hectáreas</option>
+                        <option>Personas</option>
+                        <option>Proyectos</option>
+                        <option>Actividades</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Tendencia</label>
+                    <select id="n-tend">
+                        <option>Incremento</option>
+                        <option>Decremento</option>
+                        <option>Estabilidad</option>
+                    </select>
+                </div>
+                <div class="fg">
+                    <label>Línea base</label>
+                    <input type="number" id="n-lb" value="0" step="any">
+                </div>
+                <div class="fg">
+                    <label>Meta cuatrienio *</label>
+                    <input type="number" id="n-mc" step="any" placeholder="Ej: 4">
+                </div>
+            </div>
+
+            <div class="section-div">Metas y Avances por Año</div>
+            <div class="avances-grid">
+                <div class="anio-card" id="ac-2024">
+                    <div class="anio-label">2024</div>
+                    <div class="anio-campo"><label>Meta</label><input type="number" id="n-24m" step="any" value="0" oninput="calcN()"></div>
+                    <div class="anio-campo"><label>Avance</label><input type="number" id="n-24a" step="any" value="0" oninput="calcN()"></div>
+                    <div class="calc-hint" id="n-24h">Cumpl: —</div>
+                </div>
+                <div class="anio-card" id="ac-2025">
+                    <div class="anio-label">2025</div>
+                    <div class="anio-campo"><label>Meta</label><input type="number" id="n-25m" step="any" value="0" oninput="calcN()"></div>
+                    <div class="anio-campo"><label>Avance</label><input type="number" id="n-25a" step="any" value="0" oninput="calcN()"></div>
+                    <div class="calc-hint" id="n-25h">Cumpl: —</div>
+                </div>
+                <div class="anio-card" id="ac-2026">
+                    <div class="anio-label">2026</div>
+                    <div class="anio-campo"><label>Meta</label><input type="number" id="n-26m" step="any" value="0" oninput="calcN()"></div>
+                    <div class="anio-campo"><label>Avance</label><input type="number" id="n-26a" step="any" value="0" oninput="calcN()"></div>
+                    <div class="calc-hint" id="n-26h">Cumpl: —</div>
+                </div>
+                <div class="anio-card" id="ac-2027">
+                    <div class="anio-label">2027</div>
+                    <div class="anio-campo"><label>Meta</label><input type="number" id="n-27m" step="any" value="0" oninput="calcN()"></div>
+                    <div class="anio-campo"><label>Avance</label><input type="number" id="n-27a" step="any" value="0" oninput="calcN()"></div>
+                    <div class="calc-hint" id="n-27h">Cumpl: —</div>
+                </div>
+            </div>
+            <div class="calc-hint" id="n-totals" style="margin-top:.6rem; font-size:.75rem; color:var(--dorado);"></div>
+
+            <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-top:1.2rem;">
+                <button class="btn btn-success" onclick="crearPrograma()">💾 Crear Programa</button>
+                <button class="btn btn-muted" onclick="limpiarNuevo()">🗑️ Limpiar</button>
+            </div>
+            <div class="msg" id="n-msg"></div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════ -->
+    <!-- PANEL 3: CARGAR EXCEL                      -->
+    <!-- ══════════════════════════════════════════ -->
+    <div class="panel" id="p-excel">
+
+        <!-- Formato esperado -->
+        <div class="card">
+            <div class="card-title">📋 Formato del Archivo Excel</div>
+            <div class="col-hint">
+                <h4>Columnas requeridas (la primera fila debe ser el encabezado):</h4>
+                <div class="col-tags">
+                    <span class="col-tag req">secretaria</span>
+                    <span class="col-tag req">linea_estrategica</span>
+                    <span class="col-tag req">programa</span>
+                    <span class="col-tag req">indicador</span>
+                    <span class="col-tag req">meta_cuatrenio</span>
+                    <span class="col-tag">componente</span>
+                    <span class="col-tag">codigo</span>
+                    <span class="col-tag">unidad</span>
+                    <span class="col-tag">tendencia</span>
+                    <span class="col-tag">linea_base</span>
+                    <span class="col-tag">meta_2024</span>
+                    <span class="col-tag">avance_2024</span>
+                    <span class="col-tag">meta_2025</span>
+                    <span class="col-tag">avance_2025</span>
+                    <span class="col-tag">meta_2026</span>
+                    <span class="col-tag">avance_2026</span>
+                    <span class="col-tag">meta_2027</span>
+                    <span class="col-tag">avance_2027</span>
+                </div>
+                <p style="margin-top:.7rem;font-size:.75rem;color:var(--muted);">
+                    Los campos <code style="color:var(--dorado)">pct_cumplimiento</code>, <code style="color:var(--dorado)">pct_avance_pd</code>,
+                    <code style="color:var(--dorado)">avance_acumulado</code> y <code style="color:var(--dorado)">pct_avance_fecha</code>
+                    se calculan <strong>automáticamente</strong> — no los incluyas en el Excel.
+                </p>
+            </div>
+            <button class="btn btn-muted" onclick="descargarPlantilla()" style="font-size:.8rem;">⬇️ Descargar Plantilla Excel</button>
+        </div>
+
+        <!-- Modo de carga -->
+        <div class="card">
+            <div class="card-title">⚙️ Modo de Actualización</div>
+            <div class="mode-grid" id="mode-grid">
+                <label class="mode-card selected" onclick="selMode(this,'replace')">
+                    <input type="radio" name="modo" value="replace" checked>
+                    <div class="mode-card-title">🔄 Reemplazar Todo</div>
+                    <div class="mode-card-desc">Borra <strong>todos</strong> los programas actuales en Firebase y los sustituye con los del Excel. Útil para cargas masivas de actualización.</div>
+                </label>
+                <label class="mode-card" onclick="selMode(this,'merge')">
+                    <input type="radio" name="modo" value="merge">
+                    <div class="mode-card-title">🔃 Combinar / Actualizar</div>
+                    <div class="mode-card-desc">Actualiza los programas existentes (por código) y agrega los nuevos que no existan. No borra los que no vienen en el Excel.</div>
+                </label>
+                <label class="mode-card" onclick="selMode(this,'add')">
+                    <input type="radio" name="modo" value="add">
+                    <div class="mode-card-title">➕ Solo Agregar</div>
+                    <div class="mode-card-desc">Agrega únicamente los programas nuevos (cuyo código no exista en Firebase). Los existentes no se modifican.</div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="card">
+            <div class="card-title">📂 Seleccionar Archivo</div>
+            <div class="drop-zone" id="dz" onclick="document.getElementById('xl-input').click()">
+                <div class="dz-icon">📊</div>
+                <p><strong>Haz clic aquí</strong> o arrastra tu archivo</p>
+                <p style="margin-top:.3rem;">Formatos: <strong>.xlsx · .xls · .csv</strong></p>
+            </div>
+            <input type="file" id="xl-input" accept=".xlsx,.xls,.csv" onchange="leerExcel(event)">
+
+            <!-- Preview -->
+            <div id="xl-preview" style="display:none; margin-top:1.2rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;flex-wrap:wrap;gap:.5rem;">
+                    <div style="font-size:.88rem;font-weight:700;">👁️ Vista Previa — <span id="xl-resumen"></span></div>
+                </div>
+                <div class="xl-prev-wrap">
+                    <table class="xl-prev">
+                        <thead>
+                            <tr>
+                                <th>#</th><th>Secretaría</th><th>Programa</th><th>Indicador</th>
+                                <th>Meta 4A</th><th>Av.2024</th><th>Av.2025</th><th>Av.2026</th><th>Av.2027</th><th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="xl-tbody"></tbody>
+                    </table>
+                </div>
+
+                <!-- Barra de progreso de subida -->
+                <div id="xl-progreso" style="display:none; margin-top:.8rem;">
+                    <div style="font-size:.8rem; margin-bottom:.3rem;" id="xl-prog-txt">Subiendo...</div>
+                    <div class="prog-bar-wrap"><div class="prog-bar-fill" id="xl-prog-fill" style="width:0%"></div></div>
+                </div>
+
+                <div class="xl-actions">
+                    <button class="btn btn-success" id="btn-xl-subir" onclick="subirExcel()">☁️ Subir a Firebase</button>
+                    <button class="btn btn-muted" onclick="cancelarExcel()">✖️ Cancelar</button>
+                    <span id="xl-warn" style="font-size:.78rem; color:#fcd34d;"></span>
+                </div>
+                <div class="msg" id="xl-msg"></div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /container -->
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- MODAL EDITAR                                   -->
+<!-- ══════════════════════════════════════════════ -->
+<div class="overlay" id="overlay" onclick="cierreOverlay(event)">
+<div class="modal">
+    <div class="modal-header">
+        <div class="modal-title">✏️ Editar Programa</div>
+        <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+
+    <input type="hidden" id="e-id">
+
+    <div class="section-div">Información General</div>
+    <div class="form-grid">
+        <div class="fg">
+            <label>Secretaría *</label>
+            <select id="e-sec" onchange="autoKeyE()">
+                <option value="">Seleccionar...</option>
+                <option>Secretaria de Gobierno</option>
+                <option>Sec de Bienestar y Dllo Social</option>
+                <option>Secretaria de Turismo</option>
+                <option>Sec Planeacion y Obras Pub</option>
+                <option>Sec Medio Ambiente y Dllo Rural</option>
+            </select>
+        </div>
+        <div class="fg">
+            <label>Secretaría Key</label>
+            <input type="text" id="e-seckey">
+        </div>
+        <div class="fg full">
+            <label>Línea Estratégica *</label>
+            <input type="text" id="e-linea">
+        </div>
+        <div class="fg full">
+            <label>Componente</label>
+            <input type="text" id="e-comp">
+        </div>
+        <div class="fg full">
+            <label>Programa *</label>
+            <input type="text" id="e-prog">
+        </div>
+        <div class="fg">
+            <label>Código</label>
+            <input type="number" id="e-cod">
+        </div>
+        <div class="fg">
+            <label>Indicador *</label>
+            <input type="text" id="e-ind">
+        </div>
+        <div class="fg">
+            <label>Unidad</label>
+            <select id="e-und">
+                <option>Número</option><option>Porcentaje</option><option>%</option>
+                <option>Hectáreas</option><option>Personas</option><option>Proyectos</option><option>Actividades</option>
+            </select>
+        </div>
+        <div class="fg">
+            <label>Tendencia</label>
+            <select id="e-tend">
+                <option>Incremento</option><option>Decremento</option><option>Estabilidad</option>
+            </select>
+        </div>
+        <div class="fg">
+            <label>Línea base</label>
+            <input type="number" id="e-lb" step="any">
+        </div>
+        <div class="fg">
+            <label>Meta cuatrienio *</label>
+            <input type="number" id="e-mc" step="any" oninput="calcE()">
+        </div>
+    </div>
+
+    <div class="section-div">Metas y Avances por Año</div>
+    <div class="avances-grid">
+        <div class="anio-card">
+            <div class="anio-label">2024</div>
+            <div class="anio-campo"><label>Meta</label><input type="number" id="e-24m" step="any" oninput="calcE()"></div>
+            <div class="anio-campo"><label>Avance</label><input type="number" id="e-24a" step="any" oninput="calcE()"></div>
+            <div class="calc-hint" id="e-24h">Cumpl: —</div>
+        </div>
+        <div class="anio-card">
+            <div class="anio-label">2025</div>
+            <div class="anio-campo"><label>Meta</label><input type="number" id="e-25m" step="any" oninput="calcE()"></div>
+            <div class="anio-campo"><label>Avance</label><input type="number" id="e-25a" step="any" oninput="calcE()"></div>
+            <div class="calc-hint" id="e-25h">Cumpl: —</div>
+        </div>
+        <div class="anio-card">
+            <div class="anio-label">2026</div>
+            <div class="anio-campo"><label>Meta</label><input type="number" id="e-26m" step="any" oninput="calcE()"></div>
+            <div class="anio-campo"><label>Avance</label><input type="number" id="e-26a" step="any" oninput="calcE()"></div>
+            <div class="calc-hint" id="e-26h">Cumpl: —</div>
+        </div>
+        <div class="anio-card">
+            <div class="anio-label">2027</div>
+            <div class="anio-campo"><label>Meta</label><input type="number" id="e-27m" step="any" oninput="calcE()"></div>
+            <div class="anio-campo"><label>Avance</label><input type="number" id="e-27a" step="any" oninput="calcE()"></div>
+            <div class="calc-hint" id="e-27h">Cumpl: —</div>
+        </div>
+    </div>
+    <div class="calc-hint" id="e-totals" style="margin-top:.6rem; font-size:.75rem; color:var(--dorado);"></div>
+
+    <div class="msg" id="e-msg"></div>
+
+    <div class="modal-footer">
+        <button class="btn btn-muted" onclick="cerrarModal()">Cancelar</button>
+        <button class="btn btn-primary" id="btn-guardar-e" onclick="guardarEdicion()">💾 Guardar Cambios</button>
+    </div>
+</div>
+</div>
+
+<!-- NOTIF -->
+<div id="notifbox"></div>
+
+<script>
+// ══════════════════════════════════════════
+// FIREBASE CONFIG
+// ══════════════════════════════════════════
+const fbConfig = {
+    apiKey:            "AIzaSyBzP_NnuPmewAeOJ7IkJxkiSrHgpObz4cQ",
+    authDomain:        "plan-de-desarrollo-49495.firebaseapp.com",
+    projectId:         "plan-de-desarrollo-49495",
+    storageBucket:     "plan-de-desarrollo-49495.firebasestorage.app",
+    messagingSenderId: "374569479398",
+    appId:             "1:374569479398:web:f718e47ee0ae0d8a439f27"
+};
+
+let db = null, fbOk = false;
+let todos = [];   // cache
+
+// ── Inicializar
+(function init() {
+    try {
+        firebase.initializeApp(fbConfig);
+        db = firebase.firestore();
+        fbOk = true;
+        setStatus(true, `Conectado · ${fbConfig.projectId}`);
+        recargar();
+    } catch(e) {
+        setStatus(false, 'Error Firebase: ' + e.message);
+    }
+})();
+
+// ══════════════════════════════════════════
+// UTILIDADES
+// ══════════════════════════════════════════
+function setStatus(ok, t) {
+    document.getElementById('dot').className = 'dot' + (ok?' on':'');
+    document.getElementById('st-text').textContent = (ok?'✅ ':'❌ ') + t;
+}
+
+function notif(msg, tipo='s', ms=4000) {
+    const b = document.getElementById('notifbox');
+    const el = document.createElement('div');
+    el.className = 'notif ' + tipo;
+    el.textContent = msg;
+    b.appendChild(el);
+    setTimeout(() => el.remove(), ms);
+}
+
+function showMsg(id, msg, tipo) {
+    const el = document.getElementById(id);
+    el.className = 'msg ' + tipo;
+    el.innerHTML = msg;
+    el.style.display = 'block';
+    el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+function hideMsg(id) { document.getElementById(id).style.display = 'none'; }
+
+function pct(v) { return isNaN(v) ? '—' : (v*100).toFixed(1) + '%'; }
+function n(v)   { return parseFloat(v) || 0; }
+function round6(v) { return Math.round(v * 1e6) / 1e6; }
+
+// Calcula campos derivados dado un objeto de datos
+function calcularDerived(d) {
+    const mc = n(d.meta_cuatrenio);
+    ['2024','2025','2026','2027'].forEach(y => {
+        const ay = d['anio_' + y];
+        if (!ay) return;
+        const meta = n(ay.meta), av = n(ay.avance);
+        ay.pct_cumplimiento = meta > 0 ? round6(av / meta) : 0;
+        ay.pct_avance_pd    = mc  > 0 ? round6(av / mc)   : 0;
+    });
+    const sumAv = ['2024','2025','2026','2027'].reduce((s, y) => s + n((d['anio_'+y]||{}).avance), 0);
+    d.avance_acumulado = round6(sumAv);
+    d.pct_avance_fecha  = mc > 0 ? round6(sumAv / mc) : 0;
+    return d;
+}
+
+// Secretaría → key
+const SEC_KEY = {
+    'Secretaria de Gobierno':          'secretaria_gobierno',
+    'Sec de Bienestar y Dllo Social':  'bienestar_social',
+    'Secretaria de Turismo':           'turismo',
+    'Sec Planeacion y Obras Pub':      'planeacion',
+    'Sec Medio Ambiente y Dllo Rural': 'medio_ambiente',
+};
+
+// ══════════════════════════════════════════
+// CARGAR DATOS
+// ══════════════════════════════════════════
+async function recargar() {
+    if (!fbOk) return;
+    document.getElementById('tbody').innerHTML =
+        '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted)"><span class="spin"></span> Cargando...</td></tr>';
+    try {
+        const snap = await db.collection('programas').get();
+        todos = [];
+        snap.forEach(d => todos.push({ _id: d.id, ...d.data() }));
+        todos.sort((a,b) => (a.secretaria||'').localeCompare(b.secretaria||''));
+        actualizarStats();
+        poblarFiltros();
+        filtrar();
+    } catch(e) {
+        notif('❌ Error cargando: ' + e.message, 'e');
+        document.getElementById('tbody').innerHTML =
+            '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--rojo)">Error al cargar datos</td></tr>';
+    }
+}
+
+function actualizarStats() {
+    const total = todos.length;
+    const secs  = new Set(todos.map(p => p.secretaria)).size;
+    const avg   = todos.length ? todos.reduce((s,p) => s + n(p.pct_avance_fecha), 0) / todos.length : 0;
+    const sinAv = todos.filter(p => n((p.anio_2026||{}).avance) === 0).length;
+
+    document.getElementById('s-total').textContent = total;
+    document.getElementById('s-secs').textContent  = secs;
+    document.getElementById('s-avg').textContent   = pct(avg);
+    document.getElementById('s-sin').textContent   = sinAv;
+}
+
+function poblarFiltros() {
+    const secs   = [...new Set(todos.map(p=>p.secretaria).filter(Boolean))].sort();
+    const lineas = [...new Set(todos.map(p=>p.linea_estrategica).filter(Boolean))].sort();
+
+    const fs = document.getElementById('fil-sec');
+    const fl = document.getElementById('fil-linea');
+    const vs = fs.value, vl = fl.value;
+
+    while (fs.options.length > 1) fs.remove(1);
+    while (fl.options.length > 1) fl.remove(1);
+
+    secs.forEach(s   => { const o=document.createElement('option'); o.value=s; o.textContent=s; fs.appendChild(o); });
+    lineas.forEach(l => { const o=document.createElement('option'); o.value=l; o.textContent=l.length>60?l.slice(0,60)+'…':l; fl.appendChild(o); });
+
+    if (vs) fs.value = vs;
+    if (vl) fl.value = vl;
+}
+
+// ══════════════════════════════════════════
+// TABLA
+// ══════════════════════════════════════════
+function filtrar() {
+    const q  = document.getElementById('buscar').value.toLowerCase();
+    const fs = document.getElementById('fil-sec').value;
+    const fl = document.getElementById('fil-linea').value;
+
+    const res = todos.filter(p => {
+        const okQ  = !q  || JSON.stringify(p).toLowerCase().includes(q);
+        const okS  = !fs || p.secretaria === fs;
+        const okL  = !fl || p.linea_estrategica === fl;
+        return okQ && okS && okL;
+    });
+
+    renderTabla(res);
+    document.getElementById('conteo').textContent = `${res.length} de ${todos.length} programas`;
+}
+
+function colorPct(v) {
+    if (v >= .9) return 'b-ok';
+    if (v >= .5) return 'b-warn';
+    return 'b-bad';
+}
+
+function renderTabla(lista) {
+    const tbody = document.getElementById('tbody');
+    if (!lista.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted)">Sin resultados</td></tr>';
+        return;
+    }
+    tbody.innerHTML = lista.map(p => {
+        const a24 = n((p.anio_2024||{}).avance);
+        const a25 = n((p.anio_2025||{}).avance);
+        const a26 = n((p.anio_2026||{}).avance);
+        const tot = n(p.pct_avance_fecha);
+        const pClass = colorPct(tot);
+        const bw = Math.min(100, Math.round(tot * 100));
+        const barC = tot>=.9 ? '' : tot>=.5 ? ' warn' : ' bad';
+        return `<tr>
+            <td><span class="badge b-sec">${abrev(p.secretaria)}</span></td>
+            <td class="cell-prog" title="${p.programa||''}">${p.programa||'—'}</td>
+            <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${p.indicador||''}">${p.indicador||'—'}</td>
+            <td style="text-align:center">${n(p.meta_cuatrenio)}</td>
+            <td style="text-align:center">${a24}</td>
+            <td style="text-align:center">${a25}</td>
+            <td style="text-align:center">${a26}</td>
+            <td>
+                <span class="badge ${pClass}">${pct(tot)}</span>
+                <div class="pbar-wrap"><div class="pbar${barC}" style="width:${bw}%"></div></div>
+            </td>
+            <td>
+                <div style="display:flex;gap:.3rem">
+                    <button class="btn btn-sm btn-edit" onclick="abrirEditar('${p._id}')">✏️ Editar</button>
+                    <button class="btn btn-sm btn-del"  onclick="eliminar('${p._id}','${(p.programa||'').replace(/'/g,"\\'")}')">🗑️</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+}
+
+function abrev(s) {
+    if (!s) return '?';
+    const m = { 'Secretaria de Gobierno':'Gobierno', 'Sec de Bienestar y Dllo Social':'Bienestar',
+                'Secretaria de Turismo':'Turismo', 'Sec Planeacion y Obras Pub':'Planeación',
+                'Sec Medio Ambiente y Dllo Rural':'Medio Amb.' };
+    return m[s] || s.slice(0,10);
+}
+
+// ══════════════════════════════════════════
+// CÁLCULO AUTOMÁTICO (nuevo y editar)
+// ══════════════════════════════════════════
+function calcGeneric(pre, mc) {
+    ['24','25','26','27'].forEach(y => {
+        const meta = n(document.getElementById(`${pre}-${y}m`).value);
+        const av   = n(document.getElementById(`${pre}-${y}a`).value);
+        const c    = meta > 0 ? av/meta : 0;
+        document.getElementById(`${pre}-${y}h`).textContent =
+            `Cumpl: ${pct(c)}  (av: ${av} / meta: ${meta})`;
+    });
+    const sumAv = ['24','25','26','27'].reduce((s,y) => s + n(document.getElementById(`${pre}-${y}a`).value), 0);
+    const totPct = mc > 0 ? sumAv/mc : 0;
+    const el = document.getElementById(`${pre}-totals`);
+    if (el) el.textContent = `Avance acumulado: ${sumAv} de ${mc}  ·  Avance del PD: ${pct(totPct)}`;
+}
+function calcN() { calcGeneric('n', n(document.getElementById('n-mc').value)); }
+function calcE() { calcGeneric('e', n(document.getElementById('e-mc').value)); }
+
+// ══════════════════════════════════════════
+// AUTOKEY
+// ══════════════════════════════════════════
+function autoKey() {
+    const sec = document.getElementById('n-sec').value;
+    document.getElementById('n-seckey').value = SEC_KEY[sec] || sec.toLowerCase().replace(/\s+/g,'_').replace(/[áàä]/g,'a').replace(/[éè]/g,'e').replace(/[íì]/g,'i').replace(/[óò]/g,'o').replace(/[úù]/g,'u');
+}
+function autoKeyE() {
+    const sec = document.getElementById('e-sec').value;
+    document.getElementById('e-seckey').value = SEC_KEY[sec] || '';
+}
+
+// ══════════════════════════════════════════
+// CREAR PROGRAMA
+// ══════════════════════════════════════════
+async function crearPrograma() {
+    hideMsg('n-msg');
+    if (!fbOk) { showMsg('n-msg','❌ Firebase no conectado','err'); return; }
+
+    const sec  = document.getElementById('n-sec').value;
+    const prog = document.getElementById('n-prog').value.trim();
+    const ind  = document.getElementById('n-ind').value.trim();
+    const mc   = n(document.getElementById('n-mc').value);
+    const lin  = document.getElementById('n-linea').value.trim();
+
+    if (!sec)  { showMsg('n-msg','⚠️ Selecciona la <strong>Secretaría</strong>.','err'); return; }
+    if (!lin)  { showMsg('n-msg','⚠️ Ingresa la <strong>Línea Estratégica</strong>.','err'); return; }
+    if (!prog) { showMsg('n-msg','⚠️ Ingresa el <strong>Programa</strong>.','err'); return; }
+    if (!ind)  { showMsg('n-msg','⚠️ Ingresa el <strong>Indicador</strong>.','err'); return; }
+    if (!mc)   { showMsg('n-msg','⚠️ Ingresa la <strong>Meta del Cuatrienio</strong>.','err'); return; }
+
+    const g = id => n(document.getElementById(id).value);
+    let d = {
+        secretaria:        sec,
+        secretaria_key:    document.getElementById('n-seckey').value,
+        linea_estrategica: lin,
+        componente:        document.getElementById('n-comp').value.trim(),
+        programa:          prog,
+        codigo:            n(document.getElementById('n-cod').value),
+        indicador:         ind,
+        unidad:            document.getElementById('n-und').value,
+        tendencia:         document.getElementById('n-tend').value,
+        linea_base:        g('n-lb'),
+        meta_cuatrenio:    mc,
+        anio_2024: { meta: g('n-24m'), avance: g('n-24a'), pct_cumplimiento:0, pct_avance_pd:0 },
+        anio_2025: { meta: g('n-25m'), avance: g('n-25a'), pct_cumplimiento:0, pct_avance_pd:0 },
+        anio_2026: { meta: g('n-26m'), avance: g('n-26a'), pct_cumplimiento:0, pct_avance_pd:0 },
+        anio_2027: { meta: g('n-27m'), avance: g('n-27a') },
+        avance_acumulado: 0,
+        pct_avance_fecha: 0
+    };
+    d = calcularDerived(d);
+
+    const btn = document.querySelector('#p-nuevo .btn-success');
+    btn.innerHTML = '<span class="spin"></span> Guardando...'; btn.disabled = true;
+
+    console.log('📤 Creando programa:', d);
+    try {
+        const ref = await db.collection('programas').add(d);
+        console.log('✅ Creado con ID:', ref.id);
+        showMsg('n-msg', `✅ Programa creado correctamente · ID: ${ref.id}`, 'succ');
+        notif('✅ Programa creado', 's');
+        limpiarNuevo();
+        recargar();
+    } catch(e) {
+        console.error(e);
+        const msg = e.code === 'permission-denied'
+            ? `🔒 <strong>Sin permisos de escritura.</strong> Actualiza las reglas de Firestore para la colección <code>programas</code>.`
+            : '❌ Error: ' + e.message;
+        showMsg('n-msg', msg, 'err');
+    } finally {
+        btn.innerHTML = '💾 Crear Programa'; btn.disabled = false;
+    }
+}
+
+function limpiarNuevo() {
+    ['n-sec','n-seckey','n-linea','n-comp','n-prog','n-ind'].forEach(id => document.getElementById(id).value = '');
+    ['n-lb','n-mc','n-24m','n-24a','n-25m','n-25a','n-26m','n-26a','n-27m','n-27a'].forEach(id => document.getElementById(id).value = '0');
+    ['n-24h','n-25h','n-26h','n-27h'].forEach(id => document.getElementById(id).textContent = 'Cumpl: —');
+    document.getElementById('n-totals').textContent = '';
+    hideMsg('n-msg');
+}
+
+// ══════════════════════════════════════════
+// ABRIR MODAL EDITAR
+// ══════════════════════════════════════════
+function abrirEditar(id) {
+    const p = todos.find(x => x._id === id);
+    if (!p) return;
+
+    document.getElementById('e-id').value     = id;
+    document.getElementById('e-sec').value    = p.secretaria    || '';
+    document.getElementById('e-seckey').value = p.secretaria_key|| '';
+    document.getElementById('e-linea').value  = p.linea_estrategica || '';
+    document.getElementById('e-comp').value   = p.componente    || '';
+    document.getElementById('e-prog').value   = p.programa      || '';
+    document.getElementById('e-cod').value    = p.codigo        || '';
+    document.getElementById('e-ind').value    = p.indicador     || '';
+    document.getElementById('e-und').value    = p.unidad        || 'Número';
+    document.getElementById('e-tend').value   = p.tendencia     || 'Incremento';
+    document.getElementById('e-lb').value     = p.linea_base    ?? 0;
+    document.getElementById('e-mc').value     = p.meta_cuatrenio ?? 0;
+
+    [['24','2024'],['25','2025'],['26','2026'],['27','2027']].forEach(([s,y]) => {
+        const ay = p['anio_'+y] || {};
+        document.getElementById(`e-${s}m`).value = ay.meta   ?? 0;
+        document.getElementById(`e-${s}a`).value = ay.avance ?? 0;
+    });
+
+    calcE();
+    hideMsg('e-msg');
+    document.getElementById('overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarModal() {
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+function cierreOverlay(e) { if (e.target === document.getElementById('overlay')) cerrarModal(); }
+
+// ══════════════════════════════════════════
+// GUARDAR EDICIÓN
+// ══════════════════════════════════════════
+async function guardarEdicion() {
+    hideMsg('e-msg');
+    if (!fbOk) { showMsg('e-msg','❌ Firebase no conectado','err'); return; }
+
+    const id   = document.getElementById('e-id').value;
+    const sec  = document.getElementById('e-sec').value;
+    const prog = document.getElementById('e-prog').value.trim();
+    const ind  = document.getElementById('e-ind').value.trim();
+    const mc   = n(document.getElementById('e-mc').value);
+    const lin  = document.getElementById('e-linea').value.trim();
+
+    if (!sec)  { showMsg('e-msg','⚠️ Selecciona la <strong>Secretaría</strong>.','err'); return; }
+    if (!lin)  { showMsg('e-msg','⚠️ Ingresa la <strong>Línea Estratégica</strong>.','err'); return; }
+    if (!prog) { showMsg('e-msg','⚠️ Ingresa el <strong>Programa</strong>.','err'); return; }
+    if (!ind)  { showMsg('e-msg','⚠️ Ingresa el <strong>Indicador</strong>.','err'); return; }
+    if (!mc)   { showMsg('e-msg','⚠️ Ingresa la <strong>Meta del Cuatrienio</strong>.','err'); return; }
+
+    const g = id2 => n(document.getElementById(id2).value);
+    let d = {
+        secretaria:        sec,
+        secretaria_key:    document.getElementById('e-seckey').value,
+        linea_estrategica: lin,
+        componente:        document.getElementById('e-comp').value.trim(),
+        programa:          prog,
+        codigo:            g('e-cod'),
+        indicador:         ind,
+        unidad:            document.getElementById('e-und').value,
+        tendencia:         document.getElementById('e-tend').value,
+        linea_base:        g('e-lb'),
+        meta_cuatrenio:    mc,
+        anio_2024: { meta: g('e-24m'), avance: g('e-24a'), pct_cumplimiento:0, pct_avance_pd:0 },
+        anio_2025: { meta: g('e-25m'), avance: g('e-25a'), pct_cumplimiento:0, pct_avance_pd:0 },
+        anio_2026: { meta: g('e-26m'), avance: g('e-26a'), pct_cumplimiento:0, pct_avance_pd:0 },
+        anio_2027: { meta: g('e-27m'), avance: g('e-27a') },
+        avance_acumulado: 0,
+        pct_avance_fecha: 0
+    };
+    d = calcularDerived(d);
+
+    const btn = document.getElementById('btn-guardar-e');
+    btn.innerHTML = '<span class="spin"></span> Guardando...'; btn.disabled = true;
+
+    console.log('📤 Actualizando:', id, d);
+    try {
+        await db.collection('programas').doc(id).set(d);
+        console.log('✅ Actualizado');
+        notif('✅ Programa actualizado', 's');
+        cerrarModal();
+        recargar();
+    } catch(e) {
+        console.error(e);
+        const msg = e.code === 'permission-denied'
+            ? `🔒 <strong>Sin permisos de escritura.</strong> Revisa las reglas de Firestore.`
+            : '❌ Error: ' + e.message;
+        showMsg('e-msg', msg, 'err');
+    } finally {
+        btn.innerHTML = '💾 Guardar Cambios'; btn.disabled = false;
+    }
+}
+
+// ══════════════════════════════════════════
+// BORRAR TODA LA BASE DE DATOS
+// ══════════════════════════════════════════
+async function borrarTodoBD() {
+    if (!fbOk) { notif('❌ Firebase no conectado', 'e'); return; }
+
+    const conf1 = confirm('⚠️ PELIGRO\n\nEsta acción borrará TODOS los programas de Firebase permanentemente.\n\n¿Estás seguro de que quieres continuar?');
+    if (!conf1) return;
+
+    const texto = prompt('Para confirmar, escribe exactamente:\n\nBORRAR');
+    if (texto !== 'BORRAR') { notif('⚠️ Operación cancelada', 'w'); return; }
+
+    try {
+        notif('🗑️ Borrando todos los programas...', 'w', 10000);
+        document.getElementById('tbody').innerHTML =
+            '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--dorado)"><span class="spin"></span> Borrando...</td></tr>';
+
+        const snap = await db.collection('programas').get();
+        const total = snap.size;
+
+        if (total === 0) { notif('ℹ️ La base de datos ya está vacía', 'w'); recargar(); return; }
+
+        let batch = db.batch(); let cnt = 0;
+        const batches = [];
+        snap.forEach(d => {
+            batch.delete(d.ref); cnt++;
+            if (cnt === 450) { batches.push(batch); batch = db.batch(); cnt = 0; }
+        });
+        if (cnt) batches.push(batch);
+
+        for (const b of batches) await b.commit();
+
+        notif(`✅ ${total} programas eliminados correctamente`, 's', 6000);
+        recargar();
+    } catch(e) {
+        console.error(e);
+        notif('❌ Error al borrar: ' + e.message, 'e', 8000);
+        recargar();
+    }
+}
+
+// ══════════════════════════════════════════
+// ELIMINAR
+// ══════════════════════════════════════════
+async function eliminar(id, nombre) {
+    if (!confirm(`¿Eliminar el programa:\n\n"${nombre}"\n\nEsta acción NO se puede deshacer.`)) return;
+    try {
+        await db.collection('programas').doc(id).delete();
+        notif('🗑️ Programa eliminado', 'w');
+        recargar();
+    } catch(e) {
+        notif('❌ Error al eliminar: ' + e.message, 'e');
+    }
+}
+
+// ══════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════
+function tab(id, el) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('p-' + id).classList.add('active');
+    el.classList.add('active');
+    if (id === 'lista') recargar();
+}
+
+// ══════════════════════════════════════════════════════
+// EXCEL — CONFIG: mapeo hojas → secretarías y líneas
+// ══════════════════════════════════════════════════════
+const SHEET_SEC = {
+    'SEC. GOBIERNO':                   'Secretaria de Gobierno',
+    'SEC. BIENESTAR Y DLLO SOCIAL':    'Sec de Bienestar y Dllo Social',
+    'SEC. TURISMO Y DLLO ECONOMICO':   'Secretaria de Turismo',
+    'SEC. PLANEACION Y OBRAS PUBLICA': 'Sec Planeacion y Obras Pub',
+    'SEC. MEDIO AMBIENTE Y DLLO RURA': 'Sec Medio Ambiente y Dllo Rural',
+};
+
+const LINEAS_MAP = {
+    '01': '01. JUNTOS POR LA GOBERNANZA, LA SEGURIDAD, LA MOVILIDAD Y LA HUMANIZACIÓN DE LA SALUD',
+    '02': '02. JUNTOS POR EL MOVIMIENTO NIÑO: EQUIDAD SOCIAL, EDUCACIÓN, CULTURA Y DEPORTE',
+    '03': '03. JUNTOS POR EL TURISMO, EL EMPRENDIMIENTO, LA CONEXIÓN Y ALIANZAS PARA EL DESARROLLO',
+    '04': '04. JUNTOS POR LA PLANEACIÓN Y DESARROLLO EQUITATIVO DEL TERRITORIO',
+    '05': '05. JUNTOS POR EL MEDIO AMBIENTE, LA PREVENCIÓN Y ATENCIÓN DE EMERGENCIAS Y DESASTRES Y LA DIGNIFICACIÓN DEL CAMPO GUATAPENSE',
+};
+
+// Normaliza texto para comparación de encabezados (quita tildes, \n, espacios extra)
+function normH(v) {
+    return String(v||'').toLowerCase()
+        .replace(/\n/g,' ').replace(/[áàäâ]/g,'a').replace(/[éèêë]/g,'e')
+        .replace(/[íìîï]/g,'i').replace(/[óòôö]/g,'o').replace(/[úùûü]/g,'u')
+        .replace(/[ñ]/g,'n').replace(/\s+/g,' ').trim();
+}
+
+// Encuentra la primera columna donde TODOS los keywords aparecen en el encabezado
+function findC(hdrs, ...kws) {
+    return hdrs.findIndex(h => { const n = normH(h); return kws.every(k => n.includes(k)); });
+}
+
+// ══════════════════════════════════════════════════════
+// EXCEL — VARIABLES
+// ══════════════════════════════════════════════════════
+let xlDatos = [];
+let modoXl  = 'replace';
+
+const dzEl = document.getElementById('dz');
+dzEl.addEventListener('dragover',  e => { e.preventDefault(); dzEl.classList.add('over'); });
+dzEl.addEventListener('dragleave', () => dzEl.classList.remove('over'));
+dzEl.addEventListener('drop', e => {
+    e.preventDefault(); dzEl.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if (f) procesarArchivoXl(f);
+});
+
+function selMode(card, modo) {
+    document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    modoXl = modo;
+}
+
+// ══════════════════════════════════════════════════════
+// LEER EXCEL — Lee TODAS las hojas del archivo real
+// Estructura: fila 1 = título, fila 2 = encabezados, fila 3+ = datos
+// ══════════════════════════════════════════════════════
+function leerExcel(e) {
+    const f = e.target.files[0];
+    if (f) procesarArchivoXl(f);
+}
+
+function procesarArchivoXl(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['xlsx','xls','csv'].includes(ext)) { notif('❌ Usa .xlsx, .xls o .csv', 'e'); return; }
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+        try {
+            const wb = XLSX.read(new Uint8Array(ev.target.result), { type:'array' });
+
+            // Filtrar hojas de datos (excluir CONSOLIDADO)
+            const hojas = wb.SheetNames.filter(s => !normH(s).includes('consolidado'));
+            if (!hojas.length) { notif('⚠️ No se encontraron hojas de datos', 'w'); return; }
+
+            const programas = [];
+            const diagHojas = []; // Para mostrar diagnóstico de columnas
+
+            hojas.forEach(nombreHoja => {
+                const secretaria = SHEET_SEC[nombreHoja] || nombreHoja;
+                const ws   = wb.Sheets[nombreHoja];
+                const raw  = XLSX.utils.sheet_to_json(ws, { header:1, defval:'' });
+                if (raw.length < 3) return; // Necesita al menos: título + encabezado + 1 dato
+
+                const hdrs = raw[1]; // Fila 2 (índice 1) = encabezados de columna
+
+                // ── Detectar índices de columnas dinámicamente ──────────────
+                const c = {
+                    linea: findC(hdrs, 'nea', 'estrat'),
+                    comp:  findC(hdrs, 'componente'),
+                    prog:  findC(hdrs, 'programa'),
+                    cod:   findC(hdrs, 'digo', 'producto'),
+                    ind:   findC(hdrs, 'indicador', 'producto'),
+                    und:   findC(hdrs, 'unidad'),
+                    tend:  findC(hdrs, 'tendencia'),
+                    lb:    findC(hdrs, 'linea', 'base'),
+                    mc:    findC(hdrs, 'meta', 'cuatrenio'),
+                    m24:   findC(hdrs, 'meta', '2024'),
+                    a24:   findC(hdrs, 'avance', '2024'),
+                    m25:   findC(hdrs, 'meta', '2025'),
+                    a25:   findC(hdrs, 'avance', '2025'),
+                    m26:   findC(hdrs, 'meta', '2026'),
+                    a26:   findC(hdrs, 'avance', '2026'),
+                    m27:   findC(hdrs, 'meta', '2027'),
+                    a27:   findC(hdrs, 'avance', '2027'),
+                };
+
+                // Guardar diagnóstico
+                diagHojas.push({ hoja: nombreHoja, secretaria, hdrs, c, filas: raw.length - 2 });
+
+                let lastComp = '', lastLinea = '';
+
+                raw.slice(2).forEach(row => {
+                    const progVal = String(row[c.prog] || '').trim();
+                    if (!progVal) return; // Saltar filas vacías
+
+                    // Forward-fill COMPONENTE (celdas fusionadas en Excel)
+                    const compVal = String(row[c.comp] || '').trim();
+                    if (compVal) lastComp = compVal;
+
+                    // ── Obtener Línea Estratégica ───────────────────────────
+                    let lineaVal = '';
+                    if (c.linea >= 0) {
+                        // Hoja BIENESTAR: tiene columna LINEA ESTRATÉGICA
+                        const lv = String(row[c.linea] || '').trim();
+                        // Limpiar prefijo "LINEA ESTRATEGICA: " si existe
+                        const cleaned = lv.replace(/^l[iíÍI]nea\s+estrat[eé]gica\s*[:\s]*/i, '').trim();
+                        if (cleaned && !normH(cleaned).startsWith('nea estrat')) {
+                            lastLinea = cleaned;
+                        }
+                        lineaVal = lastLinea;
+                    }
+                    // Para otras hojas: derivar del código del componente/programa
+                    if (!lineaVal) {
+                        const codeStr = (lastComp + progVal).replace(/\D/g, '');
+                        const prefix  = codeStr.slice(0, 2);
+                        lineaVal = LINEAS_MAP[prefix] || '';
+                    }
+
+                    const nv = idx => idx >= 0 ? (parseFloat(String(row[idx]||0).replace(',','.')) || 0) : 0;
+
+                    programas.push({
+                        secretaria,
+                        secretaria_key:    SEC_KEY[secretaria] || '',
+                        linea_estrategica: lineaVal,
+                        componente:        lastComp,
+                        programa:          progVal,
+                        codigo:            nv(c.cod),
+                        indicador:         String(row[c.ind]||'').trim(),
+                        unidad:            String(row[c.und]||'Número').trim() || 'Número',
+                        tendencia:         String(row[c.tend]||'Incremento').trim() || 'Incremento',
+                        linea_base:        nv(c.lb),
+                        meta_cuatrenio:    nv(c.mc),
+                        anio_2024: { meta: nv(c.m24), avance: nv(c.a24) },
+                        anio_2025: { meta: nv(c.m25), avance: nv(c.a25) },
+                        anio_2026: { meta: nv(c.m26), avance: nv(c.a26) },
+                        anio_2027: { meta: nv(c.m27), avance: nv(c.a27) },
+                    });
+                });
+            });
+
+            if (!programas.length) { notif('⚠️ No se encontraron programas válidos en el Excel', 'w'); return; }
+            construirPreview(programas, diagHojas);
+
+        } catch(err) {
+            console.error('❌ Error leyendo Excel:', err);
+            notif('❌ Error: ' + err.message, 'e');
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function construirPreview(programas, diagHojas) {
+    xlDatos = [];
+    const tbody = document.getElementById('xl-tbody');
+    tbody.innerHTML = '';
+    let validos = 0, errores = 0;
+
+    programas.forEach((p, i) => {
+        const errs = [];
+        if (!p.programa)        errs.push('sin programa');
+        if (!p.indicador)       errs.push('sin indicador');
+        if (!p.meta_cuatrenio)  errs.push('meta cuatrenio = 0');
+
+        const esValido = errs.length === 0;
+        esValido ? validos++ : errores++;
+
+        // Agregar campos pct y calcular derivados
+        let d = {
+            ...p,
+            anio_2024: { ...p.anio_2024, pct_cumplimiento:0, pct_avance_pd:0 },
+            anio_2025: { ...p.anio_2025, pct_cumplimiento:0, pct_avance_pd:0 },
+            anio_2026: { ...p.anio_2026, pct_cumplimiento:0, pct_avance_pd:0 },
+            avance_acumulado: 0, pct_avance_fecha: 0,
+            _valido: esValido, _errs: errs.join(', ')
+        };
+        d = calcularDerived(d);
+        xlDatos.push(d);
+
+        const tr = document.createElement('tr');
+        if (!esValido) tr.className = 'row-err';
+        tr.innerHTML = `
+            <td>${i+1}</td>
+            <td style="max-width:95px;overflow:hidden;text-overflow:ellipsis;">${abrev(p.secretaria)}</td>
+            <td style="max-width:210px;overflow:hidden;text-overflow:ellipsis;" title="${p.programa}">${p.programa.slice(0,50)}</td>
+            <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;">${(p.indicador||'').slice(0,30)}</td>
+            <td>${p.meta_cuatrenio}</td>
+            <td>${p.anio_2024.avance}</td>
+            <td>${p.anio_2025.avance}</td>
+            <td>${p.anio_2026.avance}</td>
+            <td>${p.anio_2027.avance}</td>
+            <td>${esValido ? '✅' : '❌ ' + errs.join(', ')}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById('xl-resumen').textContent =
+        `${programas.length} programas · ✅ ${validos} válidos · ❌ ${errores} con errores`;
+    document.getElementById('xl-warn').textContent =
+        errores ? `⚠️ ${errores} programas con errores no se subirán` : '✅ Todos los programas son válidos';
+    document.getElementById('btn-xl-subir').textContent = `☁️ Subir ${validos} programas (modo: ${modoXl})`;
+    document.getElementById('xl-preview').style.display = 'block';
+    document.getElementById('xl-msg').style.display = 'none';
+
+    // ── Diagnóstico de columnas detectadas ──
+    if (diagHojas && diagHojas.length) {
+        const CLABELS = {
+            linea:'Línea Estrat.', comp:'Componente', prog:'Programa', cod:'Código prod.',
+            ind:'Indicador', und:'Unidad', tend:'Tendencia', lb:'Línea base', mc:'Meta cuatren.',
+            m24:'Meta 2024', a24:'Avance 2024', m25:'Meta 2025', a25:'Avance 2025',
+            m26:'Meta 2026', a26:'Avance 2026', m27:'Meta 2027', a27:'Avance 2027'
+        };
+
+        const html = diagHojas.map(dh => {
+            const rows = Object.entries(dh.c).map(([k, idx]) => {
+                const encontrado = idx >= 0;
+                const header = encontrado ? String(dh.hdrs[idx]||'').replace(/\n/g,'↵') : '—';
+                return `<tr>
+                    <td>${CLABELS[k]||k}</td>
+                    <td class="${encontrado?'diag-ok':'diag-err'}">${encontrado ? 'Col '+idx : 'NO encontrado'}</td>
+                    <td>${header}</td>
+                </tr>`;
+            }).join('');
+            return `<div style="margin-bottom:1rem">
+                <strong style="color:var(--dorado)">${dh.hoja}</strong>
+                <span style="color:var(--muted);font-size:.75rem;"> · ${dh.secretaria} · ${dh.filas} filas</span>
+                <table><tr><th>Campo</th><th>Columna</th><th>Encabezado detectado</th></tr>${rows}</table>
+            </div>`;
+        }).join('');
+
+        // Crear o actualizar el bloque de diagnóstico
+        let diagEl = document.getElementById('xl-diagnostico');
+        if (!diagEl) {
+            diagEl = document.createElement('details');
+            diagEl.id = 'xl-diagnostico';
+            diagEl.className = 'diag-box';
+            document.getElementById('xl-preview').appendChild(diagEl);
+        }
+        diagEl.innerHTML = `<summary>🔬 Diagnóstico de columnas detectadas (clic para ver)</summary>${html}`;
+    }
+}
+
+// ══════════════════════════════════════════════════════
+// SUBIR A FIREBASE
+// ══════════════════════════════════════════════════════
+async function subirExcel() {
+    if (!fbOk) { showMsg('xl-msg','❌ Firebase no conectado','err'); return; }
+    const validos = xlDatos.filter(d => d._valido);
+    if (!validos.length) { showMsg('xl-msg','⚠️ No hay filas válidas para subir','err'); return; }
+
+    const btn = document.getElementById('btn-xl-subir');
+    btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Procesando...';
+    document.getElementById('xl-progreso').style.display = 'block';
+    document.getElementById('xl-msg').style.display = 'none';
+
+    const setProgreso = (txt, pct) => {
+        document.getElementById('xl-prog-txt').textContent  = txt;
+        document.getElementById('xl-prog-fill').style.width = pct + '%';
+    };
+
+    try {
+        // ── MODO REEMPLAZAR: borrar todos primero ────────────
+        if (modoXl === 'replace') {
+            setProgreso('Borrando programas actuales...', 5);
+            const snap = await db.collection('programas').get();
+            const delBatches = [];
+            let batch = db.batch(); let cnt = 0;
+            snap.forEach(d => {
+                batch.delete(d.ref); cnt++;
+                if (cnt === 450) { delBatches.push(batch); batch = db.batch(); cnt = 0; }
+            });
+            if (cnt) delBatches.push(batch);
+            for (const b of delBatches) await b.commit();
+            setProgreso(`Borrados ${snap.size} programas. Insertando nuevos...`, 30);
+        }
+
+        // ── MODO MERGE / ADD: cargar IDs actuales ───────────
+        let codigosEnDB = new Map(); // codigo → docId
+        if (modoXl === 'merge' || modoXl === 'add') {
+            setProgreso('Cargando programas existentes...', 5);
+            const snap = await db.collection('programas').get();
+            snap.forEach(d => {
+                const cod = d.data().codigo;
+                if (cod) codigosEnDB.set(String(cod), d.id);
+            });
+            setProgreso(`${snap.size} programas en base. Procesando Excel...`, 25);
+        }
+
+        // ── INSERTAR / ACTUALIZAR ────────────────────────────
+        const LOTE = 400;
+        let subidos = 0;
+        const total = validos.length;
+
+        for (let i = 0; i < total; i += LOTE) {
+            const batch = db.batch();
+            const trozo = validos.slice(i, i + LOTE);
+
+            trozo.forEach(d => {
+                // Limpiar campos internos antes de guardar
+                const { _valido, _errs, ...docData } = d;
+
+                if (modoXl === 'merge') {
+                    const existeId = codigosEnDB.get(String(docData.codigo));
+                    const ref = existeId
+                        ? db.collection('programas').doc(existeId)
+                        : db.collection('programas').doc();
+                    batch.set(ref, docData);
+                } else if (modoXl === 'add') {
+                    const existeId = codigosEnDB.get(String(docData.codigo));
+                    if (!existeId) {
+                        batch.set(db.collection('programas').doc(), docData);
+                    }
+                } else {
+                    // replace: insertar nuevo
+                    batch.set(db.collection('programas').doc(), docData);
+                }
+            });
+
+            await batch.commit();
+            subidos += trozo.length;
+            const pct = 30 + Math.round((subidos / total) * 70);
+            setProgreso(`Subidos ${subidos} de ${total} programas...`, pct);
+        }
+
+        setProgreso(`✅ Completado: ${subidos} programas procesados`, 100);
+        showMsg('xl-msg', `✅ <strong>${subidos} programas</strong> subidos correctamente con modo "<strong>${modoXl}</strong>".`, 'succ');
+        notif(`✅ ${subidos} programas actualizados en Firebase`, 's', 6000);
+        cancelarExcel(false);
+        recargar();
+    } catch(e) {
+        console.error(e);
+        const msg = e.code === 'permission-denied'
+            ? `🔒 <strong>Sin permisos de escritura.</strong> Actualiza las reglas de Firestore para la colección <code>programas</code>.`
+            : '❌ Error: ' + e.message;
+        showMsg('xl-msg', msg, 'err');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = `☁️ Subir ${xlDatos.filter(d=>d._valido).length} programas`;
+    }
+}
+
+function cancelarExcel(limpiarMsg = true) {
+    document.getElementById('xl-preview').style.display = 'none';
+    document.getElementById('xl-input').value = '';
+    document.getElementById('xl-progreso').style.display = 'none';
+    document.getElementById('xl-prog-fill').style.width = '0%';
+    if (limpiarMsg) document.getElementById('xl-msg').style.display = 'none';
+    const diagEl = document.getElementById('xl-diagnostico');
+    if (diagEl) diagEl.remove();
+    xlDatos = [];
+}
+
+// ── Plantilla de descarga — mismo formato del Excel real ─
+function descargarPlantilla() {
+    // Genera un libro con una hoja por secretaría (como el Excel original)
+    const wb = XLSX.utils.book_new();
+
+    const HOJAS = [
+        { hoja: 'SEC. GOBIERNO',                sec: 'Secretaria de Gobierno',         prefijo: '010101' },
+        { hoja: 'SEC. BIENESTAR Y DLLO SOCIAL',  sec: 'Sec de Bienestar y Dllo Social', prefijo: '020101', conLinea: true },
+        { hoja: 'SEC. TURISMO Y DLLO ECONOMICO', sec: 'Secretaria de Turismo',          prefijo: '030101' },
+        { hoja: 'SEC. PLANEACION Y OBRAS PUBLICA',sec: 'Sec Planeacion y Obras Pub',    prefijo: '040101' },
+        { hoja: 'SEC. MEDIO AMBIENTE Y DLLO RURA',sec: 'Sec Medio Ambiente y Dllo Rural',prefijo: '050101' },
+    ];
+
+    HOJAS.forEach(({ hoja, sec, prefijo, conLinea }) => {
+        const baseHdrs = conLinea
+            ? ['LINEA ESTRATÉGICA','COMPONENTE','PROGRAMA','CÓDIGO DE PRODUCTO','INDICADOR DE PRODUCTO','UNIDAD DE MEDIDA','TENDENCIA','LINEA BASE','META CUATRENIO']
+            : ['COMPONENTE','PROGRAMA','CÓDIGO DE PRODUCTO','INDICADOR DE PRODUCTO','UNIDAD DE MEDIDA','TENDENCIA','LINEA BASE','META CUATRENIO'];
+        const aniosHdrs = ['META 2024','AVANCE\nMETA 2024','META 2025','AVANCE\nMETA 2025','META 2026','AVANCE\nMETA 2026','META 2027','AVANCE\nMETA 2027'];
+        const titulo = [['AVANCE PLAN DE DESARROLLO JUNTOS CONSTRUIMOS 2024 -2027']];
+        const hdrs   = [[...baseHdrs, ...aniosHdrs]];
+        const fila   = conLinea
+            ? [LINEAS_MAP[prefijo.slice(0,2)]||'', prefijo+' Componente ejemplo', prefijo+' Programa ejemplo', 450104800, 'Indicador de ejemplo', 'Número', 'Incremento', 0, 4, 1,1, 1,0.5, 1,0, 1,0]
+            : [prefijo+' Componente ejemplo', prefijo+' Programa ejemplo', 450104800, 'Indicador de ejemplo', 'Número', 'Incremento', 0, 4, 1,1, 1,0.5, 1,0, 1,0];
+        const ws = XLSX.utils.aoa_to_sheet([...titulo, ...hdrs, fila]);
+        XLSX.utils.book_append_sheet(wb, ws, hoja);
+    });
+
+    XLSX.writeFile(wb, 'plantilla-plan-desarrollo-guatape.xlsx');
+    notif('✅ Plantilla descargada (5 hojas como el Excel original)', 's');
+}
+</script>
+</body>
+</html>

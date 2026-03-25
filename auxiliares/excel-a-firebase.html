@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subir Recaudos a Firebase</title>
+    <style>
+        body { font-family: Arial; max-width: 900px; margin: 20px auto; padding: 20px; }
+        input, button { margin: 10px 0; padding: 10px; box-sizing: border-box; }
+        button { background: #4285f4; color: white; border: none; cursor: pointer; }
+        button:hover { background: #357ae8; }
+        #app { display: none; }
+        .error { color: red; font-size: 14px; }
+        .success { color: green; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #4285f4; color: white; }
+        tr:nth-child(even) { background: #f2f2f2; }
+        #tableContainer { max-height: 400px; overflow-y: auto; margin: 20px 0; }
+        .btn-upload { background: #34a853; }
+        .btn-upload:hover { background: #2d8e47; }
+    </style>
+</head>
+<body>
+    <div id="login">
+        <h2>Iniciar Sesión</h2>
+        <input type="email" id="email" placeholder="Correo electrónico" style="width: 300px;">
+        <input type="password" id="password" placeholder="Contraseña" style="width: 300px;">
+        <button onclick="login()" style="width: 150px;">Entrar</button>
+        <button onclick="register()" style="width: 150px; background: #34a853;">Registrarse</button>
+        <p class="error" id="loginError"></p>
+    </div>
+
+    <div id="app">
+        <h2>Subir Recaudos a Firebase</h2>
+        <p>Usuario: <span id="userEmail"></span> <button onclick="logout()" style="width: auto; padding: 5px 15px;">Salir</button></p>
+        
+        <input type="file" id="excelFile" accept=".xlsx,.xls" style="width: 300px;">
+        <button onclick="loadExcel()" style="width: 150px;">Cargar Excel</button>
+        <button onclick="uploadData()" class="btn-upload" style="width: 180px;" id="btnUpload" disabled>Subir a Firebase</button>
+        
+        <p class="error" id="uploadError"></p>
+        <p id="status"></p>
+
+        <div id="tableContainer"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCtcqOSIQ7CBgXOCM_tq6LLKjDeLLbPhiQ",
+            authDomain: "recaudo-bc823.firebaseapp.com",
+            projectId: "recaudo-bc823",
+            storageBucket: "recaudo-bc823.firebasestorage.app",
+            messagingSenderId: "318995832964",
+            appId: "1:318995832964:web:bda23a7037ce663fe2e2d1"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        let excelData = [];
+
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                document.getElementById('userEmail').textContent = user.email;
+            } else {
+                document.getElementById('login').style.display = 'block';
+                document.getElementById('app').style.display = 'none';
+            }
+        });
+
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            document.getElementById('loginError').textContent = '';
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .catch(err => {
+                    document.getElementById('loginError').textContent = 
+                        err.code === 'auth/user-not-found' ? 'Usuario no encontrado' :
+                        err.code === 'auth/wrong-password' ? 'Contraseña incorrecta' :
+                        err.message;
+                });
+        }
+
+        function register() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            document.getElementById('loginError').textContent = '';
+            
+            if (password.length < 6) {
+                document.getElementById('loginError').textContent = 'La contraseña debe tener al menos 6 caracteres';
+                return;
+            }
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .catch(err => {
+                    document.getElementById('loginError').textContent = 
+                        err.code === 'auth/email-already-in-use' ? 'Este correo ya está registrado' :
+                        err.message;
+                });
+        }
+
+        function logout() {
+            auth.signOut();
+            excelData = [];
+            document.getElementById('tableContainer').innerHTML = '';
+            document.getElementById('btnUpload').disabled = true;
+        }
+
+        function excelDateToJS(serial) {
+            const utc_days = Math.floor(serial - 25569);
+            const utc_value = utc_days * 86400;
+            const date_info = new Date(utc_value * 1000);
+            
+            const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 
+                          'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+            const month = months[date_info.getUTCMonth()];
+            const year = date_info.getUTCFullYear().toString().slice(-2);
+            
+            return `${month}-${year}`;
+        }
+
+        function cleanValue(value) {
+            if (typeof value === 'string') {
+                return value.replace(/[$,]/g, '').trim();
+            }
+            return value;
+        }
+
+        function findColumnValue(row, possibleNames) {
+            for (let name of possibleNames) {
+                if (row[name] !== undefined) {
+                    return row[name];
+                }
+            }
+            // Buscar por coincidencia parcial
+            for (let key in row) {
+                for (let name of possibleNames) {
+                    if (key.toLowerCase().includes(name.toLowerCase())) {
+                        return row[key];
+                    }
+                }
+            }
+            return '';
+        }
+
+        function loadExcel() {
+            const file = document.getElementById('excelFile').files[0];
+            const errorEl = document.getElementById('uploadError');
+            const statusEl = document.getElementById('status');
+            
+            errorEl.textContent = '';
+            statusEl.textContent = '';
+            
+            if (!file) {
+                errorEl.textContent = 'Selecciona un archivo Excel';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, {type: 'array', cellDates: false});
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, {raw: false, defval: ''});
+
+                    if (jsonData.length === 0) {
+                        errorEl.textContent = 'El archivo Excel está vacío';
+                        return;
+                    }
+
+                    console.log('Primera fila:', jsonData[0]); // Para debug
+
+                    excelData = jsonData.map(row => {
+                        const año = findColumnValue(row, ['AÑO', 'ANO', 'Año', 'año']);
+                        const renta = findColumnValue(row, ['RENTA', 'Renta', 'renta']);
+                        const trimestre = findColumnValue(row, ['TRIMESTRE', 'Trimestre', 'trimestre']);
+                        const valor = findColumnValue(row, ['VALOR', ' VALOR ', ' VALOR', 'VALOR ', 'Valor', 'valor']);
+
+                        return {
+                            AÑO: año ? cleanValue(año.toString()) : '',
+                            RENTA: renta ? cleanValue(renta.toString()) : '',
+                            TRIMESTRE: trimestre ? (typeof trimestre === 'number' ? excelDateToJS(trimestre) : cleanValue(trimestre.toString())) : '',
+                            VALOR: valor ? cleanValue(valor.toString()) : ''
+                        };
+                    });
+
+                    displayTable();
+                    document.getElementById('btnUpload').disabled = false;
+                    statusEl.textContent = `✓ ${excelData.length} registros cargados`;
+                    statusEl.className = 'success';
+                } catch (err) {
+                    errorEl.textContent = `Error al leer el archivo: ${err.message}`;
+                    console.error(err);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function displayTable() {
+            if (excelData.length === 0) return;
+
+            let html = '<table><thead><tr>';
+            html += '<th>AÑO</th><th>RENTA</th><th>TRIMESTRE</th><th>VALOR</th>';
+            html += '</tr></thead><tbody>';
+
+            excelData.forEach(row => {
+                html += '<tr>';
+                html += `<td>${row.AÑO || ''}</td>`;
+                html += `<td>${row.RENTA || ''}</td>`;
+                html += `<td>${row.TRIMESTRE || ''}</td>`;
+                html += `<td>${row.VALOR || ''}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        }
+
+        function uploadData() {
+            if (excelData.length === 0) {
+                document.getElementById('uploadError').textContent = 'Primero carga un archivo Excel';
+                return;
+            }
+
+            const statusEl = document.getElementById('status');
+            const errorEl = document.getElementById('uploadError');
+            
+            statusEl.textContent = 'Subiendo datos a Firebase...';
+            statusEl.className = '';
+            errorEl.textContent = '';
+            
+            let uploaded = 0;
+            let errors = 0;
+
+            excelData.forEach((row) => {
+                db.collection('Recaudo').add(row)
+                    .then(() => {
+                        uploaded++;
+                        statusEl.textContent = `Subiendo: ${uploaded} de ${excelData.length}`;
+                        
+                        if (uploaded + errors === excelData.length) {
+                            if (errors === 0) {
+                                statusEl.textContent = `✓ ${uploaded} registros subidos exitosamente a Firebase`;
+                                statusEl.className = 'success';
+                            } else {
+                                statusEl.textContent = `${uploaded} subidos, ${errors} errores`;
+                            }
+                        }
+                    })
+                    .catch(err => {
+                        errors++;
+                        console.error('Error:', err);
+                        errorEl.textContent = `Error: ${err.message}`;
+                    });
+            });
+        }
+        
+    </script>
+</body>
+</html>
