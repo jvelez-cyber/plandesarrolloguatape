@@ -1,0 +1,3 @@
+# Credenciales Firebase - NUNCA subir al repositorio
+*firebase-adminsdk*.json
+*.key.json
