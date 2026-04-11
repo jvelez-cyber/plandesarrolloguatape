@@ -30,9 +30,9 @@
             document.getElementById('dashboardScreen').style.display = user ? 'block' : 'none';
             if (user) {
                 document.getElementById('userEmail').textContent = user.email;
-                const rol = await verificarRol(user.uid);
+                const role = await verificarRol(user.uid);
                 const adminLink = document.getElementById('adminLink');
-                if (adminLink) adminLink.style.display = rol === 'admin' ? 'inline-flex' : 'none';
+                if (adminLink) adminLink.style.display = role === 'admin' ? 'inline-flex' : 'none';
             }
         });
 
@@ -114,7 +114,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
     z-index: 0;
 }
 
-#loginScreen, #dashboardScreen { position: relative; z-index: 1; }
 #loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
 #dashboardScreen { display: none; min-height: 100vh; }
 
@@ -406,12 +405,35 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
 .card-compromisos h2                 { color: #2d5016; }
 
 /* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .tableros-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 768px) {
     .dashboard-header { padding: 1rem 1.2rem; flex-wrap: wrap; gap: 0.8rem; }
-    .tableros-grid { grid-template-columns: 1fr; padding: 0 1rem 2rem; }
-    .hero-section h2 { font-size: 1.7rem; }
-    .login-container { padding: 2rem 1.5rem; }
+    .tableros-grid { grid-template-columns: 1fr; padding: 0 1rem 2rem; gap: 1.2rem; margin: 1.5rem auto; }
+    .hero-section { padding: 2rem 1.2rem 1.2rem; }
+    .hero-section h2 { font-size: 1.6rem; letter-spacing: 1px; }
+    .hero-section p { font-size: 0.92rem; }
+    .login-container { padding: 2rem 1.2rem; border-radius: 20px; }
+    .logo-login { width: 90px; height: 90px; }
+    .login-header h1 { font-size: 1.5rem; }
     .user-email { display: none; }
+    .btn-admin { padding: 0.5rem 0.9rem; font-size: 0.75rem; }
+    .btn-logout { padding: 0.5rem 0.9rem; font-size: 0.75rem; }
+    .header-brand-text h1 { font-size: 1rem; }
+    .header-logo { width: 36px; height: 36px; }
+    .tablero-imagen { height: 170px; }
+    .tablero-img-wrap { height: 170px; }
+    .tablero-content { padding: 1.2rem 1.2rem 1.5rem; }
+    .tablero-content p { font-size: 0.85rem; }
+}
+
+@media (max-width: 480px) {
+    .tableros-grid { padding: 0 0.8rem 1.5rem; }
+    .dashboard-header { padding: 0.8rem 1rem; }
+    .hero-section h2 { font-size: 1.3rem; }
+    .btn-tablero { padding: 0.8rem 1.2rem; font-size: 0.85rem; }
 }
     </style>
 </head>
@@ -507,7 +529,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
         </div>
 
         <div class="tableros-grid">
-
             <!-- HACIENDA -->
             <div class="tablero-card card-hacienda" onclick="abrirTablero('recaudo')">
                 <div class="tablero-img-wrap">
@@ -546,7 +567,6 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
             <div class="tablero-card card-compromisos" onclick="abrirTablero('compromisos')">
                 <div class="tablero-img-wrap">
                     <img src="imagenes/DJI_0890.JPG" alt="Compromisos" class="tablero-imagen" onerror="this.src='imagenes/DJI_0913.JPG'">
-                    <div class="tablero-img-overlay"></div>
                 </div>
                 <div class="tablero-content">
                     <div class="tablero-accent-bar"></div>
