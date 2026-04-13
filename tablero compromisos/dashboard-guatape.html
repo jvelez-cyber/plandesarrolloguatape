@@ -1206,17 +1206,19 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, getDocs, updateDoc, doc, getDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+
+// Cloudinary config
+const CLOUDINARY_CLOUD = 'dpa8qccqo';
+const CLOUDINARY_PRESET = 'guatape_evidencias';
+const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/auto/upload`;
 
 const app = initializeApp({
   apiKey: "AIzaSyBEYH9mlu_Jg41iQq2gAsdVlvlpggvoObQ",
   authDomain: "compromisos-22fa4.firebaseapp.com",
-  projectId: "compromisos-22fa4",
-  storageBucket: "compromisos-22fa4.appspot.com"
+  projectId: "compromisos-22fa4"
 });
 const db = getFirestore(app);
 const auth = getAuth(app);
-const storage = getStorage(app);
 
 // BASE DE DATOS SECRETARIOS - ORGANIZADO POR CARGO (como están en Firebase)
 const secretarios = {
@@ -2328,38 +2330,36 @@ window.evSubirArchivos = async function(files) {
       const ahorroKB = Math.round((file.size - archivoFinal.size) / 1024);
       if (ahorroKB > 0) {
         progressText.textContent = `Imagen comprimida: ${evFormatarTamaño(file.size)} → ${evFormatarTamaño(archivoFinal.size)} (−${ahorroKB} KB)`;
-        await new Promise(r => setTimeout(r, 800)); // mostrar brevemente el ahorro
+        await new Promise(r => setTimeout(r, 800));
       }
 
-      const timestamp = Date.now();
-      const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
-      const path = `evidencias/${compromisoEvidenciaActual.id}/${nombreArchivo}`;
-      const fileRef = storageRef(storage, path);
+      progressText.textContent = `Subiendo: ${file.name}...`;
+      progressBar.style.width = '40%';
 
-      // Subir con seguimiento de progreso
-      const uploadTask = uploadBytesResumable(fileRef, archivoFinal);
+      // Subir a Cloudinary con FormData
+      const formData = new FormData();
+      formData.append('file', archivoFinal);
+      formData.append('upload_preset', CLOUDINARY_PRESET);
+      formData.append('folder', `evidencias/${compromisoEvidenciaActual.id}`);
+      formData.append('public_id', `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`);
 
-      await new Promise((resolve, reject) => {
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-            progressBar.style.width = pct + '%';
-            progressText.textContent = `Subiendo: ${file.name} — ${pct}%`;
-          },
-          reject,
-          resolve
-        );
+      const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+        method: 'POST',
+        body: formData
       });
 
-      const url = await getDownloadURL(fileRef);
+      if (!response.ok) throw new Error('Error en la subida a Cloudinary');
+
+      const result = await response.json();
+      progressBar.style.width = '90%';
 
       // Guardar metadatos en Firestore
       const nuevaEvidencia = {
-        url,
+        url: result.secure_url,
+        publicId: result.public_id,
         nombre: file.name,
         tipo: archivoFinal.type,
         tamaño: archivoFinal.size,
-        storagePath: path,
         fecha: new Date().toLocaleDateString('es-CO'),
         subidoPor: auth.currentUser ? auth.currentUser.email : 'desconocido'
       };
@@ -2373,6 +2373,7 @@ window.evSubirArchivos = async function(files) {
       const idx = allData.findIndex(c => c.id === compromisoEvidenciaActual.id);
       if (idx !== -1) allData[idx].evidencias = [...compromisoEvidenciaActual.evidencias];
 
+      progressBar.style.width = '100%';
       progressText.textContent = `✅ ${file.name} subido correctamente`;
 
     } catch (error) {
@@ -2401,16 +2402,7 @@ window.evEliminar = async function(idx) {
   if (!confirm(`¿Eliminar la evidencia "${ev.nombre}"? Esta acción no se puede deshacer.`)) return;
 
   try {
-    // Eliminar archivo de Storage
-    if (ev.storagePath) {
-      try {
-        await deleteObject(storageRef(storage, ev.storagePath));
-      } catch (e) {
-        console.warn('No se pudo eliminar el archivo de storage:', e);
-      }
-    }
-
-    // Eliminar de Firestore
+    // Eliminar solo de Firestore (Cloudinary requiere backend para borrar)
     await updateDoc(doc(db, "compromisos", compromisoEvidenciaActual.id), {
       evidencias: arrayRemove(ev)
     });
