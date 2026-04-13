@@ -1423,7 +1423,11 @@ function actualizarGraficos() {
         evolucionPorPeriodo[key][d.RENTA] += d.VALOR;
     });
     
-    const periodosOrdenados = Object.keys(evolucionPorPeriodo).sort();
+    const periodosOrdenados = Object.keys(evolucionPorPeriodo).sort((a, b) => {
+        const [añoA, mesA] = a.split('-').map(Number);
+        const [añoB, mesB] = b.split('-').map(Number);
+        return añoA !== añoB ? añoA - añoB : mesA - mesB;
+    });
     const labelsEvolucion = periodosOrdenados.map(k => {
         const datos = evolucionPorPeriodo[k];
         return `${meses[datos.mes - 1]} ${datos.año}`;

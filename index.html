@@ -30,10 +30,9 @@
             document.getElementById('dashboardScreen').style.display = user ? 'block' : 'none';
             if (user) {
                 document.getElementById('userEmail').textContent = user.email;
-                const rol = await verificarRol(user.uid);
-                // Mostrar link de gestión de usuarios solo para admin
+                const role = await verificarRol(user.uid);
                 const adminLink = document.getElementById('adminLink');
-                if (adminLink) adminLink.style.display = rol === 'admin' ? 'inline-flex' : 'none';
+                if (adminLink) adminLink.style.display = role === 'admin' ? 'inline-flex' : 'none';
             }
         });
 
@@ -60,49 +59,49 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x: hidden; }
 
+/* ── Slideshow ── */
 .slideshow { position: fixed; width: 100%; height: 100%; z-index: -1; }
-.slideshow img { 
-    position: absolute; width: 100%; height: 100%; 
-    object-fit: cover; opacity: 0; 
+.slideshow img {
+    position: absolute; width: 100%; height: 100%;
+    object-fit: cover; opacity: 0;
     animation: slide 175s infinite;
     image-rendering: -webkit-optimize-contrast;
 }
-
-        .slideshow img:nth-child(1) { animation-delay: 0s; }
-        .slideshow img:nth-child(2) { animation-delay: 5s; }
-        .slideshow img:nth-child(3) { animation-delay: 10s; }
-        .slideshow img:nth-child(4) { animation-delay: 15s; }
-        .slideshow img:nth-child(5) { animation-delay: 20s; }
-        .slideshow img:nth-child(6) { animation-delay: 25s; }
-        .slideshow img:nth-child(7) { animation-delay: 30s; }
-        .slideshow img:nth-child(8) { animation-delay: 35s; }
-        .slideshow img:nth-child(9) { animation-delay: 40s; }
-        .slideshow img:nth-child(10) { animation-delay: 45s; }
-        .slideshow img:nth-child(11) { animation-delay: 50s; }
-        .slideshow img:nth-child(12) { animation-delay: 55s; }
-        .slideshow img:nth-child(13) { animation-delay: 60s; }
-        .slideshow img:nth-child(14) { animation-delay: 65s; }
-        .slideshow img:nth-child(15) { animation-delay: 70s; }
-        .slideshow img:nth-child(16) { animation-delay: 75s; }
-        .slideshow img:nth-child(17) { animation-delay: 80s; }
-        .slideshow img:nth-child(18) { animation-delay: 85s; }
-        .slideshow img:nth-child(19) { animation-delay: 90s; }
-        .slideshow img:nth-child(20) { animation-delay: 95s; }
-        .slideshow img:nth-child(21) { animation-delay: 100s; }
-        .slideshow img:nth-child(22) { animation-delay: 105s; }
-        .slideshow img:nth-child(23) { animation-delay: 110s; }
-        .slideshow img:nth-child(24) { animation-delay: 115s; }
-        .slideshow img:nth-child(25) { animation-delay: 120s; }
-        .slideshow img:nth-child(26) { animation-delay: 125s; }
-        .slideshow img:nth-child(27) { animation-delay: 130s; }
-        .slideshow img:nth-child(28) { animation-delay: 135s; }
-        .slideshow img:nth-child(29) { animation-delay: 140s; }
-        .slideshow img:nth-child(30) { animation-delay: 145s; }
-        .slideshow img:nth-child(31) { animation-delay: 150s; }
-        .slideshow img:nth-child(32) { animation-delay: 155s; }
-        .slideshow img:nth-child(33) { animation-delay: 160s; }
-        .slideshow img:nth-child(34) { animation-delay: 165s; }
-        .slideshow img:nth-child(35) { animation-delay: 170s; }
+.slideshow img:nth-child(1)  { animation-delay: 0s; }
+.slideshow img:nth-child(2)  { animation-delay: 5s; }
+.slideshow img:nth-child(3)  { animation-delay: 10s; }
+.slideshow img:nth-child(4)  { animation-delay: 15s; }
+.slideshow img:nth-child(5)  { animation-delay: 20s; }
+.slideshow img:nth-child(6)  { animation-delay: 25s; }
+.slideshow img:nth-child(7)  { animation-delay: 30s; }
+.slideshow img:nth-child(8)  { animation-delay: 35s; }
+.slideshow img:nth-child(9)  { animation-delay: 40s; }
+.slideshow img:nth-child(10) { animation-delay: 45s; }
+.slideshow img:nth-child(11) { animation-delay: 50s; }
+.slideshow img:nth-child(12) { animation-delay: 55s; }
+.slideshow img:nth-child(13) { animation-delay: 60s; }
+.slideshow img:nth-child(14) { animation-delay: 65s; }
+.slideshow img:nth-child(15) { animation-delay: 70s; }
+.slideshow img:nth-child(16) { animation-delay: 75s; }
+.slideshow img:nth-child(17) { animation-delay: 80s; }
+.slideshow img:nth-child(18) { animation-delay: 85s; }
+.slideshow img:nth-child(19) { animation-delay: 90s; }
+.slideshow img:nth-child(20) { animation-delay: 95s; }
+.slideshow img:nth-child(21) { animation-delay: 100s; }
+.slideshow img:nth-child(22) { animation-delay: 105s; }
+.slideshow img:nth-child(23) { animation-delay: 110s; }
+.slideshow img:nth-child(24) { animation-delay: 115s; }
+.slideshow img:nth-child(25) { animation-delay: 120s; }
+.slideshow img:nth-child(26) { animation-delay: 125s; }
+.slideshow img:nth-child(27) { animation-delay: 130s; }
+.slideshow img:nth-child(28) { animation-delay: 135s; }
+.slideshow img:nth-child(29) { animation-delay: 140s; }
+.slideshow img:nth-child(30) { animation-delay: 145s; }
+.slideshow img:nth-child(31) { animation-delay: 150s; }
+.slideshow img:nth-child(32) { animation-delay: 155s; }
+.slideshow img:nth-child(33) { animation-delay: 160s; }
+.slideshow img:nth-child(34) { animation-delay: 165s; }
+.slideshow img:nth-child(35) { animation-delay: 170s; }
 
 @keyframes slide {
     0%, 2.86% { opacity: 1; }
@@ -111,225 +110,330 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
 
 .overlay {
     position: fixed; width: 100%; height: 100%;
-    background: linear-gradient(135deg, rgba(45, 80, 22, 0.75), rgba(26, 82, 118, 0.65));
-    backdrop-filter: blur(2px); z-index: 0;
+    background: linear-gradient(160deg, rgba(20, 50, 10, 0.82) 0%, rgba(15, 50, 80, 0.78) 100%);
+    z-index: 0;
 }
 
-#loginScreen, #dashboardScreen { position: relative; z-index: 1; }
 #loginScreen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
-#dashboardScreen { display: none; min-height: 100vh; padding: 2rem; }
+#dashboardScreen { display: none; min-height: 100vh; }
 
+/* ── LOGIN ── */
 .login-container {
-    background: rgba(255,255,255,0.98); backdrop-filter: blur(30px);
-    padding: 3rem; border-radius: 30px; max-width: 450px; width: 100%;
-    box-shadow: 0 30px 100px rgba(0,0,0,0.5); text-align: center;
-    animation: fadeInUp 0.6s ease; border: 3px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.97);
+    padding: 3rem 2.5rem; border-radius: 28px; max-width: 420px; width: 100%;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.55); text-align: center;
+    animation: fadeInUp 0.6s ease;
+    border-top: 5px solid #2d5016;
 }
 
 @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(40px) scale(0.9); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(40px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .logo-login {
-    width: 140px; height: 140px; margin: 0 auto 1.5rem; display: block;
-    filter: drop-shadow(0 10px 25px rgba(0,0,0,0.2));
-    animation: float 3s ease-in-out infinite;
+    width: 120px; height: 120px; margin: 0 auto 1.2rem; display: block;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.2));
+    animation: float 3.5s ease-in-out infinite;
 }
 
 @keyframes float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px) rotate(5deg); }
+    50%       { transform: translateY(-10px); }
 }
 
 .login-header h1 {
-    font-size: 2.2rem; background: linear-gradient(135deg, #2d5016, #1a5276);
+    font-size: 1.9rem;
+    background: linear-gradient(135deg, #2d5016, #1a5276);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.5rem;
+    font-weight: 900; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 0.3rem;
 }
 
-.login-header p { color: #555; font-size: 1.1rem; font-weight: 600; margin-bottom: 2rem; }
+.login-header p { color: #666; font-size: 0.95rem; font-weight: 600; margin-bottom: 2rem; }
 
 .user-avatar {
-    width: 110px; height: 110px; 
+    width: 90px; height: 90px;
     background: linear-gradient(135deg, #2d5016, #1a5276);
     border-radius: 50%; margin: 0 auto 1.5rem;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 15px 40px rgba(45, 80, 22, 0.4);
-    animation: pulse 2s ease-in-out infinite;
+    box-shadow: 0 10px 30px rgba(45, 80, 22, 0.35);
+    animation: pulse 2.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); box-shadow: 0 15px 40px rgba(45,80,22,0.4); }
-    50% { transform: scale(1.05); box-shadow: 0 20px 60px rgba(45,80,22,0.6); }
+    0%, 100% { box-shadow: 0 10px 30px rgba(45,80,22,0.35); }
+    50%       { box-shadow: 0 15px 45px rgba(45,80,22,0.55); transform: scale(1.04); }
 }
 
-.user-avatar i { font-size: 3.5rem; color: white; }
+.user-avatar i { font-size: 2.8rem; color: white; }
 
-.input-group { margin-bottom: 1.5rem; position: relative; }
+.input-group { margin-bottom: 1.2rem; position: relative; }
 .input-group input {
-    width: 100%; padding: 1.2rem 1.2rem 1.2rem 3.5rem;
-    border: 3px solid #e0e0e0; border-radius: 20px;
-    font-size: 1rem; transition: all 0.3s ease;
-    background: rgba(255,255,255,0.95); font-weight: 600;
+    width: 100%; padding: 1rem 1rem 1rem 3.2rem;
+    border: 2px solid #e8e8e8; border-radius: 14px;
+    font-size: 0.98rem; transition: all 0.3s ease;
+    background: #fafafa; font-weight: 500; color: #333;
 }
-
 .input-group input:focus {
     outline: none; border-color: #2d5016;
-    box-shadow: 0 0 0 6px rgba(45, 80, 22, 0.15);
-    transform: translateY(-2px);
+    box-shadow: 0 0 0 4px rgba(45, 80, 22, 0.12);
+    background: #fff;
 }
-
 .input-group i {
-    position: absolute; left: 1.2rem; top: 50%;
-    transform: translateY(-50%); color: #2d5016; font-size: 1.3rem;
+    position: absolute; left: 1.1rem; top: 50%;
+    transform: translateY(-50%); color: #2d5016; font-size: 1.1rem;
 }
 
 .btn-login {
-    width: 100%; padding: 1.4rem;
+    width: 100%; padding: 1.2rem;
     background: linear-gradient(135deg, #2d5016, #1a5276);
-    color: white; border: none; border-radius: 20px;
-    font-size: 1.2rem; font-weight: 800; cursor: pointer;
-    transition: all 0.4s ease; text-transform: uppercase; letter-spacing: 2px;
-    box-shadow: 0 10px 30px rgba(45, 80, 22, 0.4);
+    color: white; border: none; border-radius: 14px;
+    font-size: 1.1rem; font-weight: 800; cursor: pointer;
+    transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 2px;
+    box-shadow: 0 8px 25px rgba(45, 80, 22, 0.4);
+}
+.btn-login:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(45, 80, 22, 0.55);
 }
 
-.btn-login:hover:not(:disabled) {
-    transform: translateY(-5px) scale(1.02);
-    box-shadow: 0 15px 50px rgba(45, 80, 22, 0.6);
+/* ── DASHBOARD ── */
+.top-stripe {
+    height: 5px;
+    background: linear-gradient(90deg, #2d5016, #4a7c2c, #1a5276, #2980b9);
 }
 
 .dashboard-header {
-    background: rgba(255,255,255,0.98); backdrop-filter: blur(30px);
-    padding: 2rem 2.5rem; border-radius: 25px; margin-bottom: 2.5rem;
+    background: rgba(10, 20, 10, 0.55);
+    backdrop-filter: blur(20px);
+    padding: 1.2rem 2.5rem;
     display: flex; justify-content: space-between; align-items: center;
-    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
-    border: 3px solid rgba(255,255,255,0.5);
-    animation: slideDown 0.6s ease;
+    border-bottom: 1px solid rgba(255,255,255,0.12);
+    animation: slideDown 0.5s ease;
 }
 
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
-.dashboard-title h1 {
-    font-size: 2rem; background: linear-gradient(135deg, #2d5016, #1a5276);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    font-weight: 900; text-transform: uppercase; letter-spacing: 1px;
+.header-brand { display: flex; align-items: center; gap: 1rem; }
+
+.header-logo {
+    width: 48px; height: 48px;
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,0.4));
 }
 
-.dashboard-title p {
-    color: #666; margin-top: 0.4rem; font-weight: 600; font-size: 1.05rem;
+.header-brand-text h1 {
+    font-size: 1.3rem; font-weight: 900; color: #fff;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    line-height: 1.1;
+}
+.header-brand-text span {
+    font-size: 0.75rem; color: rgba(255,255,255,0.65);
+    font-weight: 500; letter-spacing: 0.5px;
 }
 
-.user-info { display: flex; align-items: center; gap: 1.2rem; }
+.user-info { display: flex; align-items: center; gap: 1rem; }
 
 .user-email {
-    color: #444; font-size: 0.95rem; font-weight: 700;
-    padding: 0.8rem 1.5rem;
-    background: linear-gradient(135deg, rgba(45,80,22,0.1), rgba(26,82,118,0.1));
-    border-radius: 15px;
+    color: rgba(255,255,255,0.85); font-size: 0.85rem; font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 30px;
 }
+
+.btn-admin {
+    display: none; padding: 0.7rem 1.4rem;
+    background: linear-gradient(135deg, #F57F17, #EF6C00);
+    color: white; border-radius: 30px; font-weight: 700;
+    text-decoration: none; font-size: 0.82rem;
+    text-transform: uppercase; letter-spacing: 1px;
+    box-shadow: 0 4px 15px rgba(239,108,0,0.4);
+    align-items: center; gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+.btn-admin:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(239,108,0,0.55); }
 
 .btn-logout {
-    padding: 1rem 2rem; background: linear-gradient(135deg, #e53e3e, #c53030);
-    color: white; border: none; border-radius: 15px; font-weight: 700;
+    padding: 0.7rem 1.4rem;
+    background: rgba(229, 62, 62, 0.85);
+    color: white; border: none; border-radius: 30px; font-weight: 700;
     cursor: pointer; transition: all 0.3s ease; text-transform: uppercase;
-    letter-spacing: 1px; box-shadow: 0 5px 20px rgba(229, 62, 62, 0.4);
+    letter-spacing: 1px; font-size: 0.82rem;
+    box-shadow: 0 4px 15px rgba(229, 62, 62, 0.3);
+}
+.btn-logout:hover { background: #c53030; transform: translateY(-2px); }
+
+/* ── HERO SECTION ── */
+.hero-section {
+    text-align: center;
+    padding: 3.5rem 2rem 2rem;
+    animation: fadeInUp 0.7s ease 0.1s both;
+}
+.hero-section h2 {
+    font-size: 2.4rem; font-weight: 900; color: #fff;
+    text-transform: uppercase; letter-spacing: 2px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    margin-bottom: 0.6rem;
+}
+.hero-section p {
+    font-size: 1.05rem; color: rgba(255,255,255,0.75);
+    font-weight: 400; max-width: 500px; margin: 0 auto;
+}
+.hero-divider {
+    width: 60px; height: 4px;
+    background: linear-gradient(90deg, #4a7c2c, #2980b9);
+    border-radius: 2px; margin: 1.2rem auto 0;
 }
 
-.btn-logout:hover {
-    background: linear-gradient(135deg, #c53030, #9b2c2c);
-    transform: translateY(-3px); box-shadow: 0 8px 30px rgba(229, 62, 62, 0.6);
-}
-
+/* ── CARDS GRID ── */
 .tableros-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 2.5rem; max-width: 1400px; margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2rem; max-width: 1200px;
+    margin: 2.5rem auto; padding: 0 2rem 3rem;
     animation: fadeIn 0.8s ease 0.3s both;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .tablero-card {
-    background: rgba(255,255,255,0.98); backdrop-filter: blur(30px);
-    padding: 0; border-radius: 30px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    cursor: pointer; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 4px solid transparent; overflow: hidden; position: relative;
+    border-radius: 22px; overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    position: relative;
+    background: #111;
 }
 
 .tablero-card:hover {
-    transform: translateY(-15px) scale(1.05) rotate(1deg);
-    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
-    border-color: rgba(45, 80, 22, 0.5);
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 25px 60px rgba(0,0,0,0.55);
 }
 
+/* Imagen de fondo */
 .tablero-imagen {
-    width: 100%; height: 250px; object-fit: cover;
-    border-radius: 25px 25px 0 0; transition: all 0.5s ease;
-    image-rendering: -webkit-optimize-contrast;
+    width: 100%; height: 220px; object-fit: cover;
+    display: block;
+    transition: transform 0.5s ease, filter 0.5s ease;
 }
-
 .tablero-card:hover .tablero-imagen {
-    transform: scale(1.1); filter: brightness(1.1);
+    transform: scale(1.08);
+    filter: brightness(0.85);
 }
 
-.tablero-content { padding: 2rem 2.5rem; text-align: center; }
+/* Overlay degradado sobre imagen */
+.tablero-img-wrap {
+    position: relative; overflow: hidden; height: 220px;
+}
+.tablero-img-overlay {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 60%;
+    background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+    pointer-events: none;
+}
+
+/* Contenido */
+.tablero-content {
+    background: rgba(255,255,255,0.97);
+    padding: 1.5rem 2rem 2rem;
+    position: relative;
+}
+
+.tablero-accent-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 4px;
+}
+
+.tablero-icon-row {
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 1rem;
+}
 
 .tablero-icon {
-    width: 90px; height: 90px; margin: -60px auto 1.5rem;
-    background: linear-gradient(135deg, #2d5016, #1a5276);
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 15px 40px rgba(45, 80, 22, 0.4); border: 5px solid white;
-    transition: all 0.4s ease;
+    width: 54px; height: 54px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
 }
-
-.tablero-card:hover .tablero-icon {
-    transform: rotate(360deg) scale(1.1);
-    box-shadow: 0 20px 60px rgba(45, 80, 22, 0.6);
-}
-
-.tablero-icon i { font-size: 2.8rem; color: white; }
-
-.tablero-card:nth-child(2) .tablero-icon {
-    background: linear-gradient(135deg, #ffc107, #ff9800);
-    box-shadow: 0 15px 40px rgba(255, 193, 7, 0.4);
-}
-
-.tablero-card:nth-child(2):hover .tablero-icon {
-    box-shadow: 0 20px 60px rgba(255, 193, 7, 0.6);
-}
-
+.tablero-card:hover .tablero-icon { transform: rotate(-8deg) scale(1.1); }
+.tablero-icon i { font-size: 1.6rem; color: white; }
 
 .tablero-card h2 {
-    font-size: 1.7rem; background: linear-gradient(135deg, #2d5016, #1a5276);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    margin-bottom: 1rem; font-weight: 900; text-transform: uppercase;
-    letter-spacing: 1px;
+    font-size: 1.25rem; font-weight: 800;
+    color: #1a2530; text-transform: uppercase; letter-spacing: 0.5px;
+    line-height: 1.2;
 }
 
 .tablero-card p {
-    color: #555; line-height: 1.8; font-size: 1.05rem; font-weight: 500;
+    color: #666; line-height: 1.7; font-size: 0.92rem; margin-bottom: 1.5rem;
 }
 
-.badge {
-    display: inline-block; padding: 0.6rem 1.5rem;
-    background: linear-gradient(135deg, rgba(45,80,22,0.15), rgba(26,82,118,0.15));
-    color: #2d5016; border-radius: 25px; font-size: 0.85rem;
-    font-weight: 800; text-transform: uppercase; margin-top: 1.2rem;
-    letter-spacing: 1px; border: 2px solid rgba(45,80,22,0.2);
+.btn-tablero {
+    display: inline-flex; align-items: center; gap: 0.5rem;
+    padding: 0.75rem 1.6rem;
+    border-radius: 30px; font-size: 0.85rem; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 1px;
+    border: none; cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+}
+.btn-tablero i { font-size: 0.8rem; transition: transform 0.3s ease; }
+.tablero-card:hover .btn-tablero i { transform: translateX(4px); }
+
+/* Colores por tablero */
+.card-hacienda .tablero-accent-bar   { background: linear-gradient(90deg, #d4af37, #f39c12); }
+.card-hacienda .tablero-icon         { background: linear-gradient(135deg, #d4af37, #f39c12); }
+.card-hacienda .btn-tablero          { background: linear-gradient(135deg, #d4af37, #e67e22); box-shadow: 0 5px 18px rgba(212,175,55,0.45); }
+.card-hacienda .btn-tablero:hover    { box-shadow: 0 8px 25px rgba(212,175,55,0.65); transform: translateY(-2px); }
+.card-hacienda h2                    { color: #7d6008; }
+
+.card-desarrollo .tablero-accent-bar { background: linear-gradient(90deg, #2980b9, #1a5276); }
+.card-desarrollo .tablero-icon       { background: linear-gradient(135deg, #2980b9, #1a5276); }
+.card-desarrollo .btn-tablero        { background: linear-gradient(135deg, #2980b9, #1a5276); box-shadow: 0 5px 18px rgba(41,128,185,0.45); }
+.card-desarrollo .btn-tablero:hover  { box-shadow: 0 8px 25px rgba(41,128,185,0.65); transform: translateY(-2px); }
+.card-desarrollo h2                  { color: #1a5276; }
+
+.card-compromisos .tablero-accent-bar{ background: linear-gradient(90deg, #2d5016, #1B5E20); }
+.card-compromisos .tablero-icon      { background: linear-gradient(135deg, #2d5016, #1B5E20); }
+.card-compromisos .btn-tablero       { background: linear-gradient(135deg, #2d5016, #1B5E20); box-shadow: 0 5px 18px rgba(45,80,22,0.45); }
+.card-compromisos .btn-tablero:hover { box-shadow: 0 8px 25px rgba(45,80,22,0.65); transform: translateY(-2px); }
+.card-compromisos h2                 { color: #2d5016; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+    .tableros-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-    .dashboard-header { flex-direction: column; gap: 1.5rem; text-align: center; }
-    .tableros-grid { grid-template-columns: 1fr; }
-    .login-container { padding: 2rem; }
-    .login-header h1 { font-size: 1.8rem; }
+    .dashboard-header { padding: 1rem 1.2rem; flex-wrap: wrap; gap: 0.8rem; }
+    .tableros-grid { grid-template-columns: 1fr; padding: 0 1rem 2rem; gap: 1.2rem; margin: 1.5rem auto; }
+    .hero-section { padding: 2rem 1.2rem 1.2rem; }
+    .hero-section h2 { font-size: 1.6rem; letter-spacing: 1px; }
+    .hero-section p { font-size: 0.92rem; }
+    .login-container { padding: 2rem 1.2rem; border-radius: 20px; }
+    .logo-login { width: 90px; height: 90px; }
+    .login-header h1 { font-size: 1.5rem; }
+    .user-email { display: none; }
+    .btn-admin { padding: 0.5rem 0.9rem; font-size: 0.75rem; }
+    .btn-logout { padding: 0.5rem 0.9rem; font-size: 0.75rem; }
+    .header-brand-text h1 { font-size: 1rem; }
+    .header-logo { width: 36px; height: 36px; }
+    .tablero-imagen { height: 170px; }
+    .tablero-img-wrap { height: 170px; }
+    .tablero-content { padding: 1.2rem 1.2rem 1.5rem; }
+    .tablero-content p { font-size: 0.85rem; }
+}
+
+@media (max-width: 480px) {
+    .tableros-grid { padding: 0 0.8rem 1.5rem; }
+    .dashboard-header { padding: 0.8rem 1rem; }
+    .hero-section h2 { font-size: 1.3rem; }
+    .btn-tablero { padding: 0.8rem 1.2rem; font-size: 0.85rem; }
 }
     </style>
 </head>
@@ -372,7 +476,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
         <img src="imagenes/Plazoleta_de_los_Zócalos.JPEG" alt="Guatapé">
     </div>
     <div class="overlay"></div>
-    
+
+    <!-- LOGIN -->
     <div id="loginScreen">
         <div class="login-container">
             <img src="imagenes/logopng.png" alt="Escudo de Guatapé" class="logo-login" onerror="this.style.display='none'">
@@ -389,23 +494,26 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
                 <i class="fas fa-lock"></i>
                 <input type="password" id="password" placeholder="Contraseña" onkeypress="if(event.key==='Enter') login()"/>
             </div>
-            <button class="btn-login" onclick="login()">INGRESAR</button>
+            <button class="btn-login" onclick="login()"><i class="fas fa-sign-in-alt"></i> &nbsp;Ingresar</button>
         </div>
     </div>
-    
+
+    <!-- DASHBOARD -->
     <div id="dashboardScreen">
+        <div class="top-stripe"></div>
+
         <div class="dashboard-header">
-            <div class="dashboard-title">
-                <h1>🏛️ Portal Guatapé</h1>
-                <p>Tableros de Gestión Municipal</p>
+            <div class="header-brand">
+                <img src="imagenes/logopng.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
+                <div class="header-brand-text">
+                    <h1>Portal Guatapé</h1>
+                    <span>Tableros de Gestión Municipal</span>
+                </div>
             </div>
             <div class="user-info">
                 <span class="user-email" id="userEmail"></span>
                 <a href="tablero%20compromisos/gestionar-usuarios.html" id="adminLink"
-                   style="display:none; padding:1rem 1.5rem; background:linear-gradient(135deg,#F57F17,#EF6C00);
-                          color:white; border-radius:15px; font-weight:700; text-decoration:none;
-                          font-size:0.95rem; text-transform:uppercase; letter-spacing:1px;
-                          box-shadow:0 5px 20px rgba(239,108,0,0.4); align-items:center; gap:0.5rem;">
+                   class="btn-admin">
                    <i class="fas fa-users-cog"></i> Gestionar Usuarios
                 </a>
                 <button class="btn-logout" onclick="logout()">
@@ -413,39 +521,64 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow-x:
                 </button>
             </div>
         </div>
-        
+
+        <div class="hero-section">
+            <h2>Bienvenido</h2>
+            <p>Selecciona un tablero para visualizar la información de gestión del municipio</p>
+            <div class="hero-divider"></div>
+        </div>
+
         <div class="tableros-grid">
-            <div class="tablero-card" onclick="abrirTablero('recaudo')">
-                <img src="imagenes/DSC04955.jpg" alt="Recaudo" class="tablero-imagen" onerror="this.src='imagenes/DJI_0944.jpg'">
-                <div class="tablero-content">
-                    <div class="tablero-icon"><i class="fas fa-coins"></i></div>
-                    <h2>Tablero de Recaudo</h2>
-                    <p>Visualización de ingresos municipales por Impuesto Predial e ICA. Análisis histórico 2018-2025 con gráficos interactivos.</p>
-                    <span class="badge">💰 Hacienda</span>
+            <!-- HACIENDA -->
+            <div class="tablero-card card-hacienda" onclick="abrirTablero('recaudo')">
+                <div class="tablero-img-wrap">
+                    <img src="imagenes/DSC04955.jpg" alt="Recaudo" class="tablero-imagen" onerror="this.src='imagenes/DJI_0944.jpg'">
+                    <div class="tablero-img-overlay"></div>
                 </div>
-            </div>
-            
-            <div class="tablero-card" onclick="abrirTablero('desarrollo')">
-                <img src="imagenes/DJI_0858.JPG" alt="Plan de Desarrollo" class="tablero-imagen" onerror="this.src='imagenes/DJI_0913.JPG'">
                 <div class="tablero-content">
-                    <div class="tablero-icon"><i class="fas fa-chart-line"></i></div>
-                    <h2>Plan de Desarrollo</h2>
-                    <p>Seguimiento del Plan "Juntos Construimos 2024-2027". Ejecución presupuestal y avance de programas por secretaría.</p>
-                    <span class="badge">🎯 Planeación</span>
+                    <div class="tablero-accent-bar"></div>
+                    <div class="tablero-icon-row">
+                        <div class="tablero-icon"><i class="fas fa-coins"></i></div>
+                        <h2>Tablero de Recaudo</h2>
+                    </div>
+                    <p>Visualización de ingresos municipales por Impuesto Predial e ICA. Análisis histórico 2018-2025 con gráficos interactivos.</p>
+                    <button class="btn-tablero">Hacienda <i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
 
-            <div class="tablero-card" onclick="abrirTablero('compromisos')">
-                <img src="imagenes/DJI_0890.JPG" alt="Compromisos" class="tablero-imagen" onerror="this.src='imagenes/DJI_0913.JPG'">
+            <!-- PLAN DE DESARROLLO -->
+            <div class="tablero-card card-desarrollo" onclick="abrirTablero('desarrollo')">
+                <div class="tablero-img-wrap">
+                    <img src="imagenes/DJI_0858.JPG" alt="Plan de Desarrollo" class="tablero-imagen" onerror="this.src='imagenes/DJI_0913.JPG'">
+                    <div class="tablero-img-overlay"></div>
+                </div>
                 <div class="tablero-content">
-                    <div class="tablero-icon" style="background:linear-gradient(135deg,#1B5E20,#00796B);">
-                        <i class="fas fa-tasks"></i>
+                    <div class="tablero-accent-bar"></div>
+                    <div class="tablero-icon-row">
+                        <div class="tablero-icon"><i class="fas fa-chart-line"></i></div>
+                        <h2>Plan de Desarrollo</h2>
                     </div>
-                    <h2>Tablero Compromisos</h2>
-                    <p>Seguimiento de compromisos de reunión por secretaría. Estado de cumplimiento, responsables y valoración de cada acuerdo.</p>
-                    <span class="badge" style="background:linear-gradient(135deg,rgba(27,94,32,0.15),rgba(0,121,107,0.15));color:#1B5E20;border-color:rgba(27,94,32,0.3);">🌳 Compromisos</span>
+                    <p>Seguimiento del Plan "Juntos Construimos 2024-2027". Ejecución presupuestal y avance de programas por secretaría.</p>
+                    <button class="btn-tablero">Planeación <i class="fas fa-arrow-right"></i></button>
                 </div>
             </div>
+
+            <!-- COMPROMISOS -->
+            <div class="tablero-card card-compromisos" onclick="abrirTablero('compromisos')">
+                <div class="tablero-img-wrap">
+                    <img src="imagenes/DJI_0890.JPG" alt="Compromisos" class="tablero-imagen" onerror="this.src='imagenes/DJI_0913.JPG'">
+                </div>
+                <div class="tablero-content">
+                    <div class="tablero-accent-bar"></div>
+                    <div class="tablero-icon-row">
+                        <div class="tablero-icon"><i class="fas fa-tasks"></i></div>
+                        <h2>Tablero Compromisos</h2>
+                    </div>
+                    <p>Seguimiento de compromisos de reunión por secretaría. Estado de cumplimiento, responsables y valoración de cada acuerdo.</p>
+                    <button class="btn-tablero">Compromisos <i class="fas fa-arrow-right"></i></button>
+                </div>
+            </div>
+
         </div>
     </div>
 </body>
