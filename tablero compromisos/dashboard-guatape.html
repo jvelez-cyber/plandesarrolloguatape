@@ -2351,6 +2351,7 @@ window.evSubirArchivos = async function(files) {
       if (!response.ok) throw new Error('Error en la subida a Cloudinary');
 
       const result = await response.json();
+      console.log('Cloudinary upload result:', result.public_id, result.secure_url, result.resource_type);
       progressBar.style.width = '90%';
 
       // Guardar metadatos en Firestore
@@ -2402,11 +2403,15 @@ window.evEliminar = async function(idx) {
   const ev = compromisoEvidenciaActual.evidencias[idx];
   if (!confirm(`¿Eliminar la evidencia "${ev.nombre}"? Esta acción no se puede deshacer.`)) return;
 
+  // Debug: mostrar el objeto evidencia en consola
+  console.log('Eliminando evidencia:', JSON.stringify(ev, null, 2));
+
   try {
     // Eliminar archivo físico de Cloudinary via función Vercel
     if (ev.publicId) {
+      console.log('Llamando a Vercel para eliminar publicId:', ev.publicId, 'resourceType:', ev.resourceType);
       try {
-        await fetch('https://plandesarrolloguatape.vercel.app/api/delete-cloudinary', {
+        const resp = await fetch('https://plandesarrolloguatape.vercel.app/api/delete-cloudinary', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -2414,9 +2419,17 @@ window.evEliminar = async function(idx) {
             resourceType: ev.resourceType || 'image'
           })
         });
+        const respText = await resp.text();
+        console.log('Respuesta Vercel (status', resp.status, '):', respText);
+        if (!resp.ok) {
+          console.warn('Vercel devolvió error:', resp.status, respText);
+        }
       } catch (e) {
-        console.warn('No se pudo eliminar de Cloudinary:', e);
+        console.warn('Error de red al llamar Vercel:', e.message);
+        alert('⚠️ No se pudo eliminar el archivo de Cloudinary (error de red). Se eliminará solo el registro.\n\nError: ' + e.message);
       }
+    } else {
+      console.warn('La evidencia no tiene publicId guardado. No se puede eliminar de Cloudinary.', ev);
     }
 
     // Eliminar registro de Firestore
