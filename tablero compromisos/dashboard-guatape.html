@@ -2357,6 +2357,7 @@ window.evSubirArchivos = async function(files) {
       const nuevaEvidencia = {
         url: result.secure_url,
         publicId: result.public_id,
+        resourceType: result.resource_type || 'image',
         nombre: file.name,
         tipo: archivoFinal.type,
         tamaño: archivoFinal.size,
@@ -2402,7 +2403,23 @@ window.evEliminar = async function(idx) {
   if (!confirm(`¿Eliminar la evidencia "${ev.nombre}"? Esta acción no se puede deshacer.`)) return;
 
   try {
-    // Eliminar solo de Firestore (Cloudinary requiere backend para borrar)
+    // Eliminar archivo físico de Cloudinary via función Vercel
+    if (ev.publicId) {
+      try {
+        await fetch('https://plandesarrolloguatape.vercel.app/api/delete-cloudinary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            publicId: ev.publicId,
+            resourceType: ev.resourceType || 'image'
+          })
+        });
+      } catch (e) {
+        console.warn('No se pudo eliminar de Cloudinary:', e);
+      }
+    }
+
+    // Eliminar registro de Firestore
     await updateDoc(doc(db, "compromisos", compromisoEvidenciaActual.id), {
       evidencias: arrayRemove(ev)
     });
