@@ -171,6 +171,7 @@ body {
 }
 .rol-admin { background:#fff8e1; color:#F57F17; border-color:var(--gold); }
 .rol-editor { background:#e3f2fd; color:var(--blue-medium); border-color:var(--blue-medium); }
+.rol-secretario { background:#fff9e6; color:#b45309; border-color:#fbbf24; }
 .rol-viewer { background:#f3e5f5; color:#7B1FA2; border-color:#AB47BC; }
 .rol-select {
   padding:0.5rem 1rem; border:3px solid var(--blue-medium); border-radius:12px;
@@ -300,6 +301,7 @@ body {
         <label>🏷️ Rol</label>
         <select id="nuevoRol">
           <option value="viewer">👁️ Solo lectura (viewer)</option>
+          <option value="secretario">📎 Secretario (sube evidencias)</option>
           <option value="editor">✏️ Editor</option>
           <option value="admin">⚙️ Administrador</option>
         </select>
@@ -410,8 +412,8 @@ async function cargarUsuarios() {
     snap.forEach(d => {
       const u = d.data();
       const uid = d.id;
-      const rolClass = u.rol === 'admin' ? 'rol-admin' : u.rol === 'editor' ? 'rol-editor' : 'rol-viewer';
-      const rolIcon  = u.rol === 'admin' ? '⚙️' : u.rol === 'editor' ? '✏️' : '👁️';
+      const rolClass = u.rol === 'admin' ? 'rol-admin' : u.rol === 'editor' ? 'rol-editor' : u.rol === 'secretario' ? 'rol-secretario' : 'rol-viewer';
+      const rolIcon  = u.rol === 'admin' ? '⚙️' : u.rol === 'editor' ? '✏️' : u.rol === 'secretario' ? '📎' : '👁️';
       const esYo = uid === currentUserUid;
       const tableros = u.tableros || ['compromisos', 'plan_desarrollo'];
 
@@ -436,9 +438,10 @@ async function cargarUsuarios() {
           </td>
           <td>
             <select class="rol-select" id="sel-${uid}">
-              <option value="viewer" ${u.rol === 'viewer' ? 'selected' : ''}>👁️ viewer</option>
-              <option value="editor" ${u.rol === 'editor' ? 'selected' : ''}>✏️ editor</option>
-              <option value="admin"  ${u.rol === 'admin'  ? 'selected' : ''}>⚙️ admin</option>
+              <option value="viewer"     ${u.rol === 'viewer'     ? 'selected' : ''}>👁️ viewer</option>
+              <option value="secretario" ${u.rol === 'secretario' ? 'selected' : ''}>📎 secretario</option>
+              <option value="editor"     ${u.rol === 'editor'     ? 'selected' : ''}>✏️ editor</option>
+              <option value="admin"      ${u.rol === 'admin'      ? 'selected' : ''}>⚙️ admin</option>
             </select>
             <button class="btn-save-rol" onclick="cambiarRol('${uid}')">💾</button>
           </td>
