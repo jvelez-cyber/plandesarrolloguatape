@@ -488,6 +488,37 @@ body {
 .ev-vacia { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.88rem; }
 .ev-vacia span { display: block; font-size: 2.5rem; margin-bottom: 0.5rem; }
 
+/* ADJUNTOS EN MODAL EDICIÓN */
+.edit-ev-lista { display: flex; flex-direction: column; gap: 0.5rem; }
+.edit-ev-vacia {
+  padding: 0.8rem 1rem; border-radius: 10px;
+  background: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.12);
+  color: var(--text-muted); font-size: 0.82rem; text-align: center;
+}
+.edit-ev-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 0.6rem 0.9rem;
+  transition: background 0.2s;
+}
+.edit-ev-item:hover { background: rgba(255,255,255,0.07); }
+.edit-ev-icon { font-size: 1.4rem; flex-shrink: 0; }
+.edit-ev-info { flex: 1; min-width: 0; }
+.edit-ev-nombre {
+  font-size: 0.82rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.edit-ev-meta { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.1rem; }
+.edit-ev-acciones { display: flex; gap: 0.4rem; flex-shrink: 0; }
+.edit-ev-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05); color: var(--text-muted);
+  cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+}
+.edit-ev-btn.descargar:hover { background: rgba(96,165,250,0.15); color: #60a5fa; border-color: rgba(96,165,250,0.3); }
+.edit-ev-btn.eliminar:hover { background: rgba(248,113,113,0.15); color: #f87171; border-color: rgba(248,113,113,0.3); }
+
 /* MODAL */
 .modal {
   display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
@@ -1155,6 +1186,10 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
         <div class="form-group full-width">
           <label>🏛️ Observaciones del Alcalde</label>
           <textarea id="editObservacionesAlcalde" rows="3" placeholder="Escribir observaciones del alcalde sobre este compromiso..."></textarea>
+        </div>
+        <div class="form-group full-width">
+          <label>📎 Archivos Adjuntos</label>
+          <div id="editEvidenciasList" class="edit-ev-lista"></div>
         </div>
       </div>
     </div>
@@ -1919,6 +1954,67 @@ function poblarSelectsResponsables() {
   });
 }
 
+function renderEvidenciasModal(compromiso) {
+  const lista = document.getElementById('editEvidenciasList');
+  if (!lista) return;
+  const evs = compromiso.evidencias || [];
+  if (evs.length === 0) {
+    lista.innerHTML = '<div class="edit-ev-vacia">📭 Sin archivos adjuntos</div>';
+    return;
+  }
+  const puedeEliminar = usuarioRol === 'editor' || usuarioRol === 'admin';
+  lista.innerHTML = evs.map((ev, idx) => `
+    <div class="edit-ev-item">
+      <span class="edit-ev-icon">${evIconoTipo(ev.tipo, ev.nombre)}</span>
+      <div class="edit-ev-info">
+        <div class="edit-ev-nombre" title="${ev.nombre}">${ev.nombre}</div>
+        <div class="edit-ev-meta">${ev.fecha || '—'} · ${ev.subidoPor || '—'}${ev.tamaño ? ' · ' + evFormatarTamaño(ev.tamaño) : ''}</div>
+      </div>
+      <div class="edit-ev-acciones">
+        <button class="edit-ev-btn descargar" onclick="window.open('${ev.url}','_blank')" title="Descargar / Ver">
+          <i class="fa-solid fa-arrow-down"></i>
+        </button>
+        ${puedeEliminar ? `
+        <button class="edit-ev-btn eliminar" onclick="eliminarEvModal(${idx})" title="Eliminar">
+          <i class="fa-solid fa-trash"></i>
+        </button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+window.eliminarEvModal = async function(idx) {
+  if (usuarioRol !== 'editor' && usuarioRol !== 'admin') return;
+  if (!compromisoEditando) return;
+  const ev = compromisoEditando.evidencias[idx];
+  if (!confirm(`¿Eliminar la evidencia "${ev.nombre}"? Esta acción no se puede deshacer.`)) return;
+
+  // Eliminar de Cloudinary
+  if (ev.publicId) {
+    try {
+      const resp = await fetch('https://plandesarrolloguatape.vercel.app/api/delete-cloudinary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicId: ev.publicId, resourceType: ev.resourceType || 'image' })
+      });
+      console.log('Cloudinary delete desde modal:', await resp.text());
+    } catch(e) { console.warn('Error Cloudinary:', e); }
+  }
+
+  // Eliminar de Firestore
+  await updateDoc(doc(db, "compromisos", compromisoEditando.id), {
+    evidencias: arrayRemove(ev)
+  });
+
+  // Actualizar datos locales
+  compromisoEditando.evidencias.splice(idx, 1);
+  const idxLocal = allData.findIndex(c => c.id === compromisoEditando.id);
+  if (idxLocal !== -1) allData[idxLocal].evidencias = [...compromisoEditando.evidencias];
+
+  renderEvidenciasModal(compromisoEditando);
+  actualizarTabla();
+};
+
 window.abrirModalEdicion = function(id) {
   compromisoEditando = allData.find(c => c.id === id);
   
@@ -1957,6 +2053,7 @@ window.abrirModalEdicion = function(id) {
   document.getElementById('editResponsable2').value = compromisoEditando.responsable2 || '';
   document.getElementById('editResponsable3').value = compromisoEditando.responsable3 || '';
   document.getElementById('editObservacionesAlcalde').value = compromisoEditando.observacionesAlcalde || '';
+  renderEvidenciasModal(compromisoEditando);
   document.getElementById('modal').classList.add('active');
 };
 
