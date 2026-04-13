@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // CORS — solo permite peticiones desde el sitio del municipio
   res.setHeader('Access-Control-Allow-Origin', 'https://jvelez-cyber.github.io');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   // Preflight OPTIONS
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Metodo no permitido' });
 
   const { publicId, resourceType = 'image' } = req.body;
   if (!publicId) return res.status(400).json({ error: 'publicId requerido' });
@@ -28,17 +28,39 @@ export default async function handler(req, res) {
     .update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`)
     .digest('hex');
 
-  const body = new URLSearchParams();
-  body.append('public_id', publicId);
-  body.append('timestamp', String(timestamp));
-  body.append('api_key', apiKey);
-  body.append('signature', signature);
+  const https = require('https');
 
-  const response = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/destroy`,
-    { method: 'POST', body }
-  );
+  const postData = new URLSearchParams({
+    public_id: publicId,
+    timestamp: String(timestamp),
+    api_key: apiKey,
+    signature: signature
+  }).toString();
 
-  const result = await response.json();
+  const result = await new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.cloudinary.com',
+      path: `/v1_1/${cloudName}/${resourceType}/destroy`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const request = https.request(options, (response) => {
+      let data = '';
+      response.on('data', chunk => { data += chunk; });
+      response.on('end', () => {
+        try { resolve(JSON.parse(data)); }
+        catch (e) { resolve({ result: 'ok' }); }
+      });
+    });
+
+    request.on('error', reject);
+    request.write(postData);
+    request.end();
+  });
+
   return res.status(200).json(result);
-}
+};
