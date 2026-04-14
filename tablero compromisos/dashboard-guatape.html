@@ -518,6 +518,70 @@ body {
 }
 .edit-ev-btn.descargar:hover { background: rgba(96,165,250,0.15); color: #60a5fa; border-color: rgba(96,165,250,0.3); }
 .edit-ev-btn.eliminar:hover { background: rgba(248,113,113,0.15); color: #f87171; border-color: rgba(248,113,113,0.3); }
+.edit-ev-zona-subida {
+  border: 2px dashed rgba(251,191,36,0.35); border-radius: 12px;
+  padding: 1rem 1.2rem; text-align: center; cursor: pointer;
+  background: rgba(251,191,36,0.03); transition: all 0.2s; margin-bottom: 0.75rem;
+}
+.edit-ev-zona-subida:hover, .edit-ev-zona-subida.drag-over {
+  border-color: rgba(251,191,36,0.7); background: rgba(251,191,36,0.07);
+}
+.edit-ev-zona-subida input[type="file"] { display: none; }
+.edit-ev-zona-text { font-size: 0.83rem; color: var(--text-muted); }
+.edit-ev-zona-text strong { color: #fbbf24; }
+.edit-ev-zona-tipos { font-size: 0.72rem; color: rgba(255,255,255,0.28); margin-top: 0.25rem; }
+.edit-ev-progress-wrap { display: none; margin-bottom: 0.6rem; }
+.edit-ev-progress-bar-bg { height: 5px; border-radius: 5px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.edit-ev-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg,#fbbf24,#fb923c); border-radius: 5px; transition: width 0.2s; }
+.edit-ev-progress-text { font-size: 0.75rem; color: #fbbf24; margin-top: 0.3rem; text-align: center; }
+
+/* MODAL DETALLE (solo lectura) */
+.modal-detalle-content {
+  background: #0d1929; border-radius: var(--radius-lg); max-width: 780px; width: 100%;
+  max-height: 92vh; overflow-y: auto; box-shadow: 0 40px 100px rgba(0,0,0,.7);
+  border: 1px solid rgba(96,165,250,0.25);
+  animation: fadeUp 0.3s ease;
+}
+.detalle-header {
+  padding: 1.4rem 2rem; border-bottom: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  background: rgba(96,165,250,0.05); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.detalle-header-titulo { font-size: 0.75rem; font-weight: 700; color: #60a5fa; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.4rem; }
+.detalle-descripcion { font-size: 1rem; font-weight: 600; color: var(--text); line-height: 1.55; }
+.detalle-body { padding: 1.8rem 2rem; display: flex; flex-direction: column; gap: 1.4rem; }
+.detalle-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.detalle-campo { display: flex; flex-direction: column; gap: 0.3rem; }
+.detalle-campo-label { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.detalle-campo-valor { font-size: 0.92rem; color: var(--text); font-weight: 500; }
+.detalle-separador { height: 1px; background: var(--border); }
+.detalle-responsables { display: flex; flex-direction: column; gap: 0.6rem; }
+.detalle-resp-item {
+  display: flex; align-items: center; gap: 0.75rem;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 0.55rem 0.9rem;
+}
+.detalle-resp-foto {
+  width: 36px; height: 36px; border-radius: 50%; object-fit: cover;
+  border: 2px solid rgba(96,165,250,0.3); flex-shrink: 0;
+  background: rgba(255,255,255,0.05); display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+}
+.detalle-resp-foto img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+.detalle-resp-nombre { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.detalle-resp-cargo { font-size: 0.73rem; color: var(--text-muted); margin-top: 0.1rem; }
+.detalle-obs {
+  background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 0.9rem 1rem; font-size: 0.88rem; color: var(--text);
+  line-height: 1.6; white-space: pre-wrap;
+}
+.detalle-seccion-titulo {
+  font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.detalle-seccion-titulo::before { content:''; display:inline-block; width:3px; height:13px; background: linear-gradient(180deg,#60a5fa,#3b82f6); border-radius:3px; }
+.tr-clickable { cursor: pointer; transition: background 0.15s; }
+.tr-clickable:hover { background: rgba(96,165,250,0.06) !important; }
 
 /* MODAL */
 .modal {
@@ -1189,6 +1253,22 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
         </div>
         <div class="form-group full-width">
           <label>📎 Archivos Adjuntos</label>
+          <!-- Zona de subida (lector, editor, admin, secretario pueden adjuntar) -->
+          <div id="editEvZonaSubida" class="edit-ev-zona-subida" style="display:none;"
+               onclick="document.getElementById('editEvFileInput').click()"
+               ondragover="event.preventDefault(); this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="editEvHandleDrop(event)">
+            <input type="file" id="editEvFileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="editModalSubirArchivos(this.files)">
+            <span style="font-size:1.6rem;display:block;margin-bottom:0.3rem;">📂</span>
+            <div class="edit-ev-zona-text">Haz clic o arrastra archivos aquí<br><strong>para adjuntar documento</strong></div>
+            <div class="edit-ev-zona-tipos">Imágenes, PDF, Word, Excel, PowerPoint · Máx. 10 MB por archivo</div>
+          </div>
+          <!-- Barra de progreso -->
+          <div id="editEvProgressWrap" class="edit-ev-progress-wrap">
+            <div class="edit-ev-progress-bar-bg"><div id="editEvProgressBar" class="edit-ev-progress-bar"></div></div>
+            <div id="editEvProgressText" class="edit-ev-progress-text">Subiendo...</div>
+          </div>
           <div id="editEvidenciasList" class="edit-ev-lista"></div>
         </div>
       </div>
@@ -1196,6 +1276,83 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
     <div class="modal-footer">
       <button class="btn-cancelar" onclick="cerrarModal()">❌ Cancelar</button>
       <button class="btn-guardar" onclick="guardarCambios()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE COMPROMISO (lectura) -->
+<div id="modalDetalle" class="modal" onclick="if(event.target===this) cerrarModalDetalle()">
+  <div class="modal-detalle-content">
+    <div class="detalle-header">
+      <div style="flex:1;min-width:0;">
+        <div class="detalle-header-titulo">👁️ Detalle del Compromiso</div>
+        <div class="detalle-descripcion" id="detalleDescripcion"></div>
+      </div>
+      <button class="btn-close-modal" onclick="cerrarModalDetalle()">✕</button>
+    </div>
+    <div class="detalle-body">
+      <!-- Fechas y Estado -->
+      <div>
+        <div class="detalle-seccion-titulo">Fechas y Estado</div>
+        <div class="detalle-grid">
+          <div class="detalle-campo">
+            <span class="detalle-campo-label">📅 Fecha Reunión</span>
+            <span class="detalle-campo-valor" id="detalleFechaReunion">—</span>
+          </div>
+          <div class="detalle-campo">
+            <span class="detalle-campo-label">📆 Fecha Asignada</span>
+            <span class="detalle-campo-valor" id="detalleFechaAsignada">—</span>
+          </div>
+          <div class="detalle-campo">
+            <span class="detalle-campo-label">✅ Fecha Cumplimiento</span>
+            <span class="detalle-campo-valor" id="detalleFechaCumplimiento">—</span>
+          </div>
+          <div class="detalle-campo">
+            <span class="detalle-campo-label">🎯 Estado</span>
+            <span class="detalle-campo-valor" id="detalleEstado">—</span>
+          </div>
+          <div class="detalle-campo">
+            <span class="detalle-campo-label">⭐ Valoración</span>
+            <span class="detalle-campo-valor" id="detalleValoracion">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="detalle-separador"></div>
+      <!-- Responsables -->
+      <div>
+        <div class="detalle-seccion-titulo">Responsables</div>
+        <div class="detalle-responsables" id="detalleResponsables"></div>
+      </div>
+      <!-- Observaciones (solo si hay) -->
+      <div id="detalleObsWrap" style="display:none;">
+        <div class="detalle-separador"></div>
+        <div style="margin-top:1rem;">
+          <div class="detalle-seccion-titulo">Observaciones del Alcalde</div>
+          <div class="detalle-obs" id="detalleObs"></div>
+        </div>
+      </div>
+      <!-- Archivos adjuntos -->
+      <div class="detalle-separador"></div>
+      <div>
+        <div class="detalle-seccion-titulo">Archivos Adjuntos</div>
+        <!-- Zona de subida (lector, editor, admin, secretario) -->
+        <div id="detalleEvZonaSubida" class="edit-ev-zona-subida" style="display:none;"
+             onclick="document.getElementById('detalleEvFileInput').click()"
+             ondragover="event.preventDefault(); this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="detalleEvHandleDrop(event)">
+          <input type="file" id="detalleEvFileInput" multiple accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" onchange="detalleSubirArchivos(this.files)">
+          <span style="font-size:1.6rem;display:block;margin-bottom:0.3rem;">📂</span>
+          <div class="edit-ev-zona-text">Haz clic o arrastra archivos aquí<br><strong>para adjuntar documento</strong></div>
+          <div class="edit-ev-zona-tipos">Imágenes, PDF, Word, Excel, PowerPoint · Máx. 10 MB por archivo</div>
+        </div>
+        <!-- Barra de progreso -->
+        <div id="detalleEvProgressWrap" class="edit-ev-progress-wrap">
+          <div class="edit-ev-progress-bar-bg"><div id="detalleEvProgressBar" class="edit-ev-progress-bar"></div></div>
+          <div id="detalleEvProgressText" class="edit-ev-progress-text">Subiendo...</div>
+        </div>
+        <div id="detalleAdjuntos" class="edit-ev-lista"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -1210,7 +1367,7 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
     <div class="modal-body">
       <div id="evDescripcion" class="ev-descripcion-label"></div>
 
-      <!-- Zona de subida (solo editor/admin) -->
+      <!-- Zona de subida (lector, editor, admin, secretario pueden adjuntar) -->
       <div id="evZonaSubida" class="ev-zona-subida" style="display:none;"
            onclick="document.getElementById('evFileInput').click()"
            ondragover="event.preventDefault(); this.classList.add('drag-over')"
@@ -1883,7 +2040,7 @@ function actualizarTabla() {
     };
     
     tbody.innerHTML += `
-      <tr id="compromiso-${c.id}">
+      <tr id="compromiso-${c.id}" class="tr-clickable" onclick="abrirDetalleCompromiso('${c.id}')">
         <td class="td-descripcion">${c.descripcion}</td>
         <td>
           <div class="responsables-grid">
@@ -1896,7 +2053,7 @@ function actualizarTabla() {
         <td><span class="badge-estado ${estadoClass}">${estadoIcon} ${estado}</span></td>
         <td>${c.valoracion || '-'}</td>
         <td class="td-observaciones">${c.observacionesAlcalde ? `<span class="obs-alcalde-text">${c.observacionesAlcalde}</span>` : '<span style="color:#bbb;">—</span>'}</td>
-        <td>
+        <td onclick="event.stopPropagation()">
           <button class="btn-accion btn-evidencia" onclick="abrirModalEvidencias('${c.id}')" title="Ver / subir evidencias" style="position:relative;">
             <i class="fa-solid fa-paperclip"></i>
             ${c.evidencias.length > 0 ? `<span class="ev-badge">${c.evidencias.length}</span>` : ''}
@@ -1908,7 +2065,7 @@ function actualizarTabla() {
           ${(usuarioRol === 'admin' || usuarioRol === 'editor') ? `
           <button class="btn-accion btn-eliminar" onclick="eliminarCompromiso('${c.id}')" title="Eliminar">
             <i class="fa-solid fa-trash"></i>
-          </button>` : ''}` : `<span title="Solo lectura" style="color:#bbb; font-size:1.3rem; cursor:default;">👁️</span>`}
+          </button>` : ''}` : `<span title="Ver detalle" style="color:#60a5fa; font-size:1.1rem; cursor:pointer;">👁️</span>`}
         </td>
       </tr>
     `;
@@ -1957,6 +2114,12 @@ function poblarSelectsResponsables() {
 function renderEvidenciasModal(compromiso) {
   const lista = document.getElementById('editEvidenciasList');
   if (!lista) return;
+
+  // Mostrar zona de subida a lector, editor, admin y secretario
+  const puedeAdjuntar = usuarioRol === 'lector' || usuarioRol === 'viewer' || usuarioRol === 'editor' || usuarioRol === 'admin' || usuarioRol === 'secretario';
+  const zonaSubida = document.getElementById('editEvZonaSubida');
+  if (zonaSubida) zonaSubida.style.display = puedeAdjuntar ? 'block' : 'none';
+
   const evs = compromiso.evidencias || [];
   if (evs.length === 0) {
     lista.innerHTML = '<div class="edit-ev-vacia">📭 Sin archivos adjuntos</div>';
@@ -1982,6 +2145,285 @@ function renderEvidenciasModal(compromiso) {
     </div>
   `).join('');
 }
+
+window.editEvHandleDrop = function(e) {
+  e.preventDefault();
+  document.getElementById('editEvZonaSubida').classList.remove('drag-over');
+  const files = e.dataTransfer.files;
+  if (files.length > 0) editModalSubirArchivos(files);
+};
+
+window.editModalSubirArchivos = async function(files) {
+  if (!compromisoEditando) return;
+  const puedeAdjuntar = usuarioRol === 'lector' || usuarioRol === 'viewer' || usuarioRol === 'editor' || usuarioRol === 'admin' || usuarioRol === 'secretario';
+  if (!puedeAdjuntar) {
+    alert('❌ No tienes permisos para adjuntar archivos');
+    return;
+  }
+
+  const progressWrap = document.getElementById('editEvProgressWrap');
+  const progressBar = document.getElementById('editEvProgressBar');
+  const progressText = document.getElementById('editEvProgressText');
+
+  for (const file of Array.from(files)) {
+    if (file.size > 10 * 1024 * 1024) {
+      alert(`❌ "${file.name}" supera el límite de 10 MB`);
+      continue;
+    }
+
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = `Procesando: ${file.name}...`;
+
+    try {
+      const archivoFinal = await evComprimirImagen(file);
+      const ahorroKB = Math.round((file.size - archivoFinal.size) / 1024);
+      if (ahorroKB > 0) {
+        progressText.textContent = `Imagen comprimida: ${evFormatarTamaño(file.size)} → ${evFormatarTamaño(archivoFinal.size)} (−${ahorroKB} KB)`;
+        await new Promise(r => setTimeout(r, 800));
+      }
+
+      progressText.textContent = `Subiendo: ${file.name}...`;
+      progressBar.style.width = '40%';
+
+      const formData = new FormData();
+      formData.append('file', archivoFinal);
+      formData.append('upload_preset', CLOUDINARY_PRESET);
+      formData.append('folder', `evidencias/${compromisoEditando.id}`);
+      formData.append('public_id', `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`);
+
+      const response = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData });
+      if (!response.ok) throw new Error('Error en la subida a Cloudinary');
+
+      const result = await response.json();
+      progressBar.style.width = '90%';
+
+      const nuevaEvidencia = {
+        url: result.secure_url,
+        publicId: result.public_id,
+        resourceType: result.resource_type || 'image',
+        nombre: file.name,
+        tipo: archivoFinal.type,
+        tamaño: archivoFinal.size,
+        fecha: new Date().toLocaleDateString('es-CO'),
+        subidoPor: auth.currentUser ? auth.currentUser.email : 'desconocido'
+      };
+
+      await updateDoc(doc(db, "compromisos", compromisoEditando.id), {
+        evidencias: arrayUnion(nuevaEvidencia)
+      });
+
+      if (!compromisoEditando.evidencias) compromisoEditando.evidencias = [];
+      compromisoEditando.evidencias.push(nuevaEvidencia);
+      const idxLocal = allData.findIndex(c => c.id === compromisoEditando.id);
+      if (idxLocal !== -1) allData[idxLocal].evidencias = [...compromisoEditando.evidencias];
+
+      progressBar.style.width = '100%';
+      progressText.textContent = `✅ ${file.name} adjuntado correctamente`;
+
+    } catch (error) {
+      console.error('Error adjuntando archivo:', error);
+      progressText.textContent = `❌ Error al subir: ${file.name}`;
+    }
+  }
+
+  renderEvidenciasModal(compromisoEditando);
+  actualizarTabla();
+
+  setTimeout(() => {
+    progressWrap.style.display = 'none';
+    progressBar.style.width = '0%';
+  }, 2500);
+
+  document.getElementById('editEvFileInput').value = '';
+};
+
+// ======== MODAL DETALLE (solo lectura) ========
+
+let compromisoDetalleActual = null;
+
+window.detalleEvHandleDrop = function(e) {
+  e.preventDefault();
+  document.getElementById('detalleEvZonaSubida').classList.remove('drag-over');
+  const files = e.dataTransfer.files;
+  if (files.length > 0) detalleSubirArchivos(files);
+};
+
+window.detalleSubirArchivos = async function(files) {
+  if (!compromisoDetalleActual) return;
+  const puedeAdjuntar = usuarioRol === 'lector' || usuarioRol === 'viewer' || usuarioRol === 'editor' || usuarioRol === 'admin' || usuarioRol === 'secretario';
+  if (!puedeAdjuntar) { alert('❌ No tienes permisos para adjuntar archivos'); return; }
+
+  const progressWrap = document.getElementById('detalleEvProgressWrap');
+  const progressBar = document.getElementById('detalleEvProgressBar');
+  const progressText = document.getElementById('detalleEvProgressText');
+
+  for (const file of Array.from(files)) {
+    if (file.size > 10 * 1024 * 1024) { alert(`❌ "${file.name}" supera el límite de 10 MB`); continue; }
+
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '0%';
+    progressText.textContent = `Procesando: ${file.name}...`;
+
+    try {
+      const archivoFinal = await evComprimirImagen(file);
+      const ahorroKB = Math.round((file.size - archivoFinal.size) / 1024);
+      if (ahorroKB > 0) {
+        progressText.textContent = `Imagen comprimida: ${evFormatarTamaño(file.size)} → ${evFormatarTamaño(archivoFinal.size)} (−${ahorroKB} KB)`;
+        await new Promise(r => setTimeout(r, 800));
+      }
+
+      progressText.textContent = `Subiendo: ${file.name}...`;
+      progressBar.style.width = '40%';
+
+      const formData = new FormData();
+      formData.append('file', archivoFinal);
+      formData.append('upload_preset', CLOUDINARY_PRESET);
+      formData.append('folder', `evidencias/${compromisoDetalleActual.id}`);
+      formData.append('public_id', `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`);
+
+      const response = await fetch(CLOUDINARY_UPLOAD_URL, { method: 'POST', body: formData });
+      if (!response.ok) throw new Error('Error en la subida a Cloudinary');
+
+      const result = await response.json();
+      progressBar.style.width = '90%';
+
+      const nuevaEvidencia = {
+        url: result.secure_url,
+        publicId: result.public_id,
+        resourceType: result.resource_type || 'image',
+        nombre: file.name,
+        tipo: archivoFinal.type,
+        tamaño: archivoFinal.size,
+        fecha: new Date().toLocaleDateString('es-CO'),
+        subidoPor: auth.currentUser ? auth.currentUser.email : 'desconocido'
+      };
+
+      await updateDoc(doc(db, "compromisos", compromisoDetalleActual.id), {
+        evidencias: arrayUnion(nuevaEvidencia)
+      });
+
+      if (!compromisoDetalleActual.evidencias) compromisoDetalleActual.evidencias = [];
+      compromisoDetalleActual.evidencias.push(nuevaEvidencia);
+      const idxLocal = allData.findIndex(c => c.id === compromisoDetalleActual.id);
+      if (idxLocal !== -1) allData[idxLocal].evidencias = [...compromisoDetalleActual.evidencias];
+
+      progressBar.style.width = '100%';
+      progressText.textContent = `✅ ${file.name} adjuntado correctamente`;
+
+    } catch (error) {
+      console.error('Error adjuntando archivo:', error);
+      progressText.textContent = `❌ Error al subir: ${file.name}`;
+    }
+  }
+
+  renderDetalleAdjuntos(compromisoDetalleActual);
+  actualizarTabla();
+  setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 2500);
+  document.getElementById('detalleEvFileInput').value = '';
+};
+
+function renderDetalleAdjuntos(c) {
+  const adjList = document.getElementById('detalleAdjuntos');
+  const puedeEliminar = usuarioRol === 'editor' || usuarioRol === 'admin';
+  const evs = c.evidencias || [];
+  if (evs.length === 0) {
+    adjList.innerHTML = '<div class="edit-ev-vacia">📭 Sin archivos adjuntos</div>';
+    return;
+  }
+  adjList.innerHTML = evs.map((ev, idx) => `
+    <div class="edit-ev-item">
+      <span class="edit-ev-icon">${evIconoTipo(ev.tipo, ev.nombre)}</span>
+      <div class="edit-ev-info">
+        <div class="edit-ev-nombre" title="${ev.nombre}">${ev.nombre}</div>
+        <div class="edit-ev-meta">${ev.fecha || '—'} · ${ev.subidoPor || '—'}${ev.tamaño ? ' · ' + evFormatarTamaño(ev.tamaño) : ''}</div>
+      </div>
+      <div class="edit-ev-acciones">
+        <button class="edit-ev-btn descargar" onclick="window.open('${ev.url}','_blank')" title="Descargar / Ver">
+          <i class="fa-solid fa-arrow-down"></i>
+        </button>
+        ${puedeEliminar ? `
+        <button class="edit-ev-btn eliminar" onclick="detalleEliminarEv(${idx})" title="Eliminar">
+          <i class="fa-solid fa-trash"></i>
+        </button>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+window.abrirDetalleCompromiso = function(id) {
+  const c = allData.find(x => x.id === id);
+  if (!c) return;
+  compromisoDetalleActual = c;
+
+  const formatFecha = (fechaStr) => {
+    if (!fechaStr) return '—';
+    try {
+      if (fechaStr.seconds) {
+        const d = new Date(fechaStr.seconds * 1000);
+        return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+      }
+      const d = new Date(fechaStr);
+      if (!isNaN(d.getTime())) return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+    } catch(e) {}
+    return '—';
+  };
+
+  const estadoMap = { 'Si':'✅ Cumplido','No':'❌ No Cumplido','En proceso':'🔄 En Proceso','En término':'⏳ En Término' };
+
+  document.getElementById('detalleDescripcion').textContent = c.descripcion || '—';
+  document.getElementById('detalleFechaReunion').textContent = formatFecha(c.fechaReunion);
+  document.getElementById('detalleFechaAsignada').textContent = formatFecha(c.fechaAsignada);
+  document.getElementById('detalleFechaCumplimiento').textContent = formatFecha(c.fechaCumplimiento);
+  document.getElementById('detalleEstado').textContent = estadoMap[c.estado] || c.estado || '—';
+  document.getElementById('detalleValoracion').textContent = c.valoracion || '— Sin valoración';
+
+  // Responsables
+  const resps = [c.responsable1, c.responsable2, c.responsable3].filter(Boolean);
+  const respContainer = document.getElementById('detalleResponsables');
+  if (resps.length === 0) {
+    respContainer.innerHTML = '<div class="edit-ev-vacia">Sin responsables asignados</div>';
+  } else {
+    respContainer.innerHTML = resps.map(cargo => {
+      const info = secretarios[cargo] || { nombre: cargo, foto: null };
+      const fotoHTML = info.foto
+        ? `<div class="detalle-resp-foto"><img src="${info.foto}" alt="${info.nombre}" onerror="this.parentElement.textContent='👤'"></div>`
+        : `<div class="detalle-resp-foto">👤</div>`;
+      return `<div class="detalle-resp-item">
+        ${fotoHTML}
+        <div>
+          <div class="detalle-resp-nombre">${info.nombre}</div>
+          <div class="detalle-resp-cargo">${cargo !== info.nombre ? cargo : ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Observaciones
+  const obsWrap = document.getElementById('detalleObsWrap');
+  if (c.observacionesAlcalde) {
+    document.getElementById('detalleObs').textContent = c.observacionesAlcalde;
+    obsWrap.style.display = 'block';
+  } else {
+    obsWrap.style.display = 'none';
+  }
+
+  // Zona de subida según rol
+  const puedeAdjuntar = usuarioRol === 'lector' || usuarioRol === 'viewer' || usuarioRol === 'editor' || usuarioRol === 'admin' || usuarioRol === 'secretario';
+  document.getElementById('detalleEvZonaSubida').style.display = puedeAdjuntar ? 'block' : 'none';
+  document.getElementById('detalleEvProgressWrap').style.display = 'none';
+  document.getElementById('detalleEvFileInput').value = '';
+
+  // Archivos adjuntos
+  renderDetalleAdjuntos(c);
+
+  document.getElementById('modalDetalle').classList.add('active');
+};
+
+window.cerrarModalDetalle = function() {
+  document.getElementById('modalDetalle').classList.remove('active');
+  compromisoDetalleActual = null;
+};
 
 window.eliminarEvModal = async function(idx) {
   if (usuarioRol !== 'editor' && usuarioRol !== 'admin') return;
@@ -2270,9 +2712,9 @@ window.abrirModalEvidencias = function(id) {
   // Mostrar descripción del compromiso
   document.getElementById('evDescripcion').textContent = compromisoEvidenciaActual.descripcion;
 
-  // Mostrar zona de subida a editores, admins y secretarios
+  // Mostrar zona de subida a lectores, editores, admins y secretarios
   document.getElementById('evZonaSubida').style.display =
-    (usuarioRol === 'editor' || usuarioRol === 'admin' || usuarioRol === 'secretario') ? 'block' : 'none';
+    (usuarioRol === 'lector' || usuarioRol === 'viewer' || usuarioRol === 'editor' || usuarioRol === 'admin' || usuarioRol === 'secretario') ? 'block' : 'none';
 
   // Ocultar barra de progreso
   document.getElementById('evProgressWrap').style.display = 'none';
@@ -2401,7 +2843,7 @@ function evComprimirImagen(file, maxWidth = 1920, calidad = 0.80) {
 
 window.evSubirArchivos = async function(files) {
   if (!compromisoEvidenciaActual) return;
-  if (usuarioRol !== 'editor' && usuarioRol !== 'admin' && usuarioRol !== 'secretario') {
+  if (usuarioRol !== 'lector' && usuarioRol !== 'viewer' && usuarioRol !== 'editor' && usuarioRol !== 'admin' && usuarioRol !== 'secretario') {
     alert('❌ No tienes permisos para subir evidencias');
     return;
   }
