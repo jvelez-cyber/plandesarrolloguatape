@@ -1168,9 +1168,14 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
   <div class="table-section">
     <div class="table-header">
       <h3 class="table-title">📋 Lista de Compromisos</h3>
-      <div class="search-wrapper">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="searchInput" placeholder="🔍 Buscar compromiso..." onkeyup="buscarCompromiso()">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <button id="btnNuevoCompromiso" onclick="abrirModalNuevo()" style="display:none; font-family:'Patrick Hand',cursive; font-size:0.95rem; background:linear-gradient(135deg,#16a34a,#15803d); color:white; border:none; border-radius:20px; padding:0.55rem 1.2rem; cursor:pointer; align-items:center; gap:0.4rem; transition:all 0.2s; white-space:nowrap;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+          ➕ Nuevo Compromiso
+        </button>
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="🔍 Buscar compromiso..." onkeyup="buscarCompromiso()">
+        </div>
       </div>
     </div>
     <div class="table-container">
@@ -1197,7 +1202,7 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
 <div id="modal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>✏️ Editar Compromiso</h2>
+      <h2 id="modalTitulo">✏️ Editar Compromiso</h2>
       <button class="btn-close-modal" onclick="cerrarModal()">✕</button>
     </div>
     <div class="modal-body">
@@ -1396,7 +1401,7 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, updateDoc, doc, getDoc, deleteDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, updateDoc, doc, getDoc, deleteDoc, arrayUnion, arrayRemove, addDoc } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 // Cloudinary config
@@ -1538,6 +1543,7 @@ let estadoSeleccionado = '';
 let compromisoEditando = null;
 let chartEstado, chartResp;
 let usuarioRol = null;
+let esNuevoCompromiso = false;
 let responsableSeleccionado = null;
 let responsableSegmentadorSeleccionado = '';
 
@@ -1649,8 +1655,19 @@ function cargarResponsables() {
     });
   });
   
+  // Agregar todos los secretarios registrados aunque no tengan compromisos asignados
+  Object.keys(secretarios).forEach(cargo => {
+    if (!responsablesData[cargo]) {
+      responsablesData[cargo] = {
+        cargo: cargo,
+        count: 0,
+        info: secretarios[cargo]
+      };
+    }
+  });
+
   // Ordenar por nombre
-  const responsablesArray = Object.values(responsablesData).sort((a, b) => 
+  const responsablesArray = Object.values(responsablesData).sort((a, b) =>
     a.info.nombre.localeCompare(b.info.nombre)
   );
   
@@ -2499,38 +2516,79 @@ window.abrirModalEdicion = function(id) {
   document.getElementById('modal').classList.add('active');
 };
 
+window.abrirModalNuevo = function() {
+  if (usuarioRol !== 'editor' && usuarioRol !== 'admin') return;
+  esNuevoCompromiso = true;
+  compromisoEditando = null;
+  document.getElementById('modalTitulo').textContent = '➕ Nuevo Compromiso';
+  document.getElementById('editDescripcion').value = '';
+  document.getElementById('editFechaReunion').value = '';
+  document.getElementById('editFechaAsignada').value = '';
+  document.getElementById('editFechaCumplimiento').value = '';
+  document.getElementById('editEstado').value = 'En proceso';
+  document.getElementById('editValoracion').value = '';
+  document.getElementById('editObservacionesAlcalde').value = '';
+  poblarSelectsResponsables();
+  document.getElementById('editResponsable1').value = '';
+  document.getElementById('editResponsable2').value = '';
+  document.getElementById('editResponsable3').value = '';
+  document.getElementById('editEvidenciasList').innerHTML = '<div class="edit-ev-vacia">📭 Sin archivos adjuntos</div>';
+  document.getElementById('modal').classList.add('active');
+};
+
 window.cerrarModal = function() {
   document.getElementById('modal').classList.remove('active');
   compromisoEditando = null;
+  esNuevoCompromiso = false;
+  document.getElementById('modalTitulo').textContent = '✏️ Editar Compromiso';
 };
 
 window.guardarCambios = async function() {
-  if (!compromisoEditando) return;
   if (usuarioRol !== 'editor' && usuarioRol !== 'admin') {
     alert('❌ No tienes permisos para editar compromisos');
     return;
   }
 
+  const descripcion = document.getElementById('editDescripcion').value.trim();
+  const responsable1 = document.getElementById('editResponsable1').value;
+
+  if (esNuevoCompromiso) {
+    if (!descripcion) { alert('❌ La descripción es obligatoria'); return; }
+    if (!responsable1) { alert('❌ Debes asignar al menos un responsable'); return; }
+  } else {
+    if (!compromisoEditando) return;
+  }
+
   try {
     document.getElementById('loadingOverlay').style.display = 'flex';
-    
-    await updateDoc(doc(db, "compromisos", compromisoEditando.id), {
-      descripcion: document.getElementById('editDescripcion').value,
+
+    const datos = {
+      descripcion: descripcion,
       fechaReunion: document.getElementById('editFechaReunion').value,
       fechaAsignada: document.getElementById('editFechaAsignada').value,
       fechaCumplimiento: document.getElementById('editFechaCumplimiento').value,
       cumplimiento: document.getElementById('editEstado').value,
       valoracionCumplimiento: document.getElementById('editValoracion').value,
-      responsable1: document.getElementById('editResponsable1').value,
+      responsable1: responsable1,
       responsable2: document.getElementById('editResponsable2').value,
       responsable3: document.getElementById('editResponsable3').value,
       observacionesAlcalde: document.getElementById('editObservacionesAlcalde').value
-    });
-    
-    alert('✅ Compromiso actualizado exitosamente');
+    };
+
+    if (esNuevoCompromiso) {
+      datos.evidencias = [];
+      datos.creadoPor = auth.currentUser?.email || '';
+      datos.fechaCreacion = new Date().toISOString().split('T')[0];
+      await addDoc(collection(db, "compromisos"), datos);
+      alert('✅ Compromiso creado exitosamente');
+    } else {
+      await updateDoc(doc(db, "compromisos", compromisoEditando.id), datos);
+      alert('✅ Compromiso actualizado exitosamente');
+    }
+
     cerrarModal();
     await cargarDatos();
-    
+
   } catch (error) {
     console.error('Error:', error);
     alert('❌ Error al guardar cambios');
@@ -3007,6 +3065,8 @@ onAuthStateChanged(auth, async (user) => {
       usuarioRol === 'editor' ? '✏️ Editor' :
       usuarioRol === 'secretario' ? '📎 Secretario' : '👁️ Solo lectura';
     document.getElementById('adminLink').style.display = usuarioRol === 'admin' ? 'inline-block' : 'none';
+    document.getElementById('btnNuevoCompromiso').style.display =
+      (usuarioRol === 'editor' || usuarioRol === 'admin') ? 'inline-flex' : 'none';
     document.getElementById('userBadge').style.display = 'flex';
 
     await cargarDatos();
@@ -3014,6 +3074,7 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('loadingOverlay').style.display = 'none';
     document.getElementById('loginOverlay').classList.remove('hidden');
     document.getElementById('userBadge').style.display = 'none';
+    document.getElementById('btnNuevoCompromiso').style.display = 'none';
     usuarioRol = null;
   }
 });
