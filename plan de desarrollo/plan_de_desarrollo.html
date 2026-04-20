@@ -695,7 +695,7 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
                     const d = p[`anio_${anio}`];
                     const meta = parseFloat(d?.meta)||0;
                     const av = parseFloat(d?.avance)||0;
-                    if (meta > 0) { suma += Math.min(av/meta, 1.2); count++; }
+                    if (meta > 0) { suma += Math.min(av/meta, 1); count++; }
                 });
                 return count > 0 ? ((suma/count)*100).toFixed(1) : 0;
             });
@@ -801,7 +801,7 @@ document.addEventListener('click',function(e){var n=document.getElementById('nav
                     const d = p[`anio_${anio}`];
                     const meta = parseFloat(d?.meta)||0;
                     const av = parseFloat(d?.avance)||0;
-                    if (meta > 0) { suma += Math.min(av/meta, 1.2); count++; }
+                    if (meta > 0) { suma += Math.min(av/meta, 1); count++; }
                 });
                 return count > 0 ? ((suma/count)*100).toFixed(1) : 0;
             });
